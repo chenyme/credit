@@ -28,6 +28,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/pay/internal/db"
 	"github.com/linux-do/pay/internal/logger"
+	"github.com/linux-do/pay/internal/model"
 	"github.com/linux-do/pay/internal/otel_trace"
 	"net/http"
 )
@@ -46,7 +47,7 @@ func LoginRequired() gin.HandlerFunc {
 		}
 
 		// load user from db to make sure is active
-		var user User
+		var user model.User
 		tx := db.DB(ctx).Where("id = ? AND is_active = ?", userId, true).First(&user)
 		if tx.Error != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error_msg": tx.Error.Error(), "data": nil})

@@ -22,13 +22,11 @@
  * SOFTWARE.
  */
 
-package oauth
+package model
 
 import (
-	"time"
-
-	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"time"
 )
 
 type OAuthUserInfo struct {
@@ -56,17 +54,6 @@ type User struct {
 	LastLoginAt      time.Time  `json:"last_login_at" gorm:"index"`
 	CreatedAt        time.Time  `json:"created_at" gorm:"autoCreateTime;index"`
 	UpdatedAt        time.Time  `json:"updated_at" gorm:"autoUpdateTime;index"`
-}
-
-type UserPayConfig struct {
-	ID         uint64          `json:"id" gorm:"primaryKey"`
-	Level      PayLevel        `json:"level" gorm:"uniqueIndex;not null"`
-	MinScore   int64           `json:"min_score" gorm:"not null;index"`
-	MaxScore   *int64          `json:"max_score" gorm:"index"`
-	DailyLimit *int64          `json:"daily_limit"`
-	FeeRate    decimal.Decimal `json:"fee_rate" gorm:"type:numeric(10,2);default:0"`
-	CreatedAt  time.Time       `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt  time.Time       `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 func (u *User) Exact(tx *gorm.DB, id uint64) error {

@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/linux-do/pay/internal/db"
+	"github.com/linux-do/pay/internal/model"
 	"io"
 	"time"
 
@@ -54,21 +55,21 @@ func GetUserIDFromContext(c *gin.Context) uint64 {
 }
 
 // GetUserFromContext 从Context中获取User对象
-func GetUserFromContext(c *gin.Context) (*User, bool) {
+func GetUserFromContext(c *gin.Context) (*model.User, bool) {
 	user, exists := c.Get(UserObjKey)
 	if !exists {
 		return nil, false
 	}
-	u, ok := user.(*User)
+	u, ok := user.(*model.User)
 	return u, ok
 }
 
 // SetUserToContext 将User对象存储到Context中
-func SetUserToContext(c *gin.Context, user *User) {
+func SetUserToContext(c *gin.Context, user *model.User) {
 	c.Set(UserObjKey, user)
 }
 
-func doOAuth(ctx context.Context, code string) (*User, error) {
+func doOAuth(ctx context.Context, code string) (*model.User, error) {
 	// init trace
 	ctx, span := otel_trace.Start(ctx, "OAuth")
 	defer span.End()
@@ -95,7 +96,7 @@ func doOAuth(ctx context.Context, code string) (*User, error) {
 		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
-	var userInfo OAuthUserInfo
+	var userInfo model.OAuthUserInfo
 	if err = json.Unmarshal(responseData, &userInfo); err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		return nil, err
@@ -107,12 +108,12 @@ func doOAuth(ctx context.Context, code string) (*User, error) {
 	}
 
 	// save to db
-	var user User
+	var user model.User
 	tx := db.DB(ctx).Where("id = ?", userInfo.Id).First(&user)
 	if tx.Error != nil {
 		// create user
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-			user = User{
+			user = model.User{
 				ID:          userInfo.Id,
 				Username:    userInfo.Username,
 				Nickname:    userInfo.Name,

@@ -22,30 +22,20 @@
  * SOFTWARE.
  */
 
-package migrator
+package model
 
 import (
-	"context"
-	"log"
-
-	"github.com/linux-do/pay/internal/model"
-
-	"github.com/linux-do/pay/internal/config"
-	"github.com/linux-do/pay/internal/db"
+	"github.com/shopspring/decimal"
+	"time"
 )
 
-func Migrate() {
-	if !config.Config.Database.Enabled {
-		return
-	}
-
-	if err := db.DB(context.Background()).AutoMigrate(
-		&model.User{},
-		&model.UserPayConfig{},
-		&model.MerchantAPIKey{},
-		&model.Order{},
-	); err != nil {
-		log.Fatalf("[PostgreSQL] auto migrate failed: %v\n", err)
-	}
-	log.Printf("[PostgreSQL] auto migrate success\n")
+type UserPayConfig struct {
+	ID         uint64          `json:"id" gorm:"primaryKey"`
+	Level      PayLevel        `json:"level" gorm:"uniqueIndex;not null"`
+	MinScore   int64           `json:"min_score" gorm:"not null;index"`
+	MaxScore   *int64          `json:"max_score" gorm:"index"`
+	DailyLimit *int64          `json:"daily_limit"`
+	FeeRate    decimal.Decimal `json:"fee_rate" gorm:"type:numeric(10,2);default:0"`
+	CreatedAt  time.Time       `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt  time.Time       `json:"updated_at" gorm:"autoUpdateTime"`
 }

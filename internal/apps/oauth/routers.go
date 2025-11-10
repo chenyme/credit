@@ -26,6 +26,7 @@ package oauth
 
 import (
 	"fmt"
+	"github.com/linux-do/pay/internal/model"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -98,16 +99,17 @@ func Callback(c *gin.Context) {
 }
 
 type BasicUserInfo struct {
-	ID               uint64     `json:"id"`
-	Username         string     `json:"username"`
-	Nickname         string     `json:"nickname"`
-	TrustLevel       TrustLevel `json:"trust_level"`
-	AvatarUrl        string     `json:"avatar_url"`
-	TotalBalance     int64      `json:"total_balance"`
-	AvailableBalance int64      `json:"available_balance"`
-	RemainQuota      int64      `json:"remain_quota"`
-	PayLevel         PayLevel   `json:"pay_level"`
-	DailyLimit       *int64     `json:"daily_limit"`
+	ID               uint64           `json:"id"`
+	Username         string           `json:"username"`
+	Nickname         string           `json:"nickname"`
+	TrustLevel       model.TrustLevel `json:"trust_level"`
+	AvatarUrl        string           `json:"avatar_url"`
+	TotalBalance     int64            `json:"total_balance"`
+	AvailableBalance int64            `json:"available_balance"`
+	PayScore         int64            `json:"pay_score"`
+	RemainQuota      int64            `json:"remain_quota"`
+	PayLevel         model.PayLevel   `json:"pay_level"`
+	DailyLimit       *int64           `json:"daily_limit"`
 }
 
 // UserInfo godoc
@@ -118,7 +120,7 @@ type BasicUserInfo struct {
 func UserInfo(c *gin.Context) {
 	user, _ := GetUserFromContext(c)
 
-	var payConfig UserPayConfig
+	var payConfig model.UserPayConfig
 	if err := db.DB(c.Request.Context()).Where("min_score <= ?", user.PayScore).
 		Where("max_score IS NULL OR max_score > ?", user.PayScore).First(&payConfig).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
@@ -135,6 +137,7 @@ func UserInfo(c *gin.Context) {
 			AvatarUrl:        user.AvatarUrl,
 			TotalBalance:     user.TotalBalance,
 			AvailableBalance: user.AvailableBalance,
+			PayScore:         user.PayScore,
 			RemainQuota:      0,
 			PayLevel:         payConfig.Level,
 			DailyLimit:       payConfig.DailyLimit,

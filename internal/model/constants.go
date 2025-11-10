@@ -22,4 +22,43 @@
  * SOFTWARE.
  */
 
-package merchant
+package model
+
+type TrustLevel uint8
+
+const (
+	TrustLevelNewUser TrustLevel = iota
+	TrustLevelBasicUser
+	TrustLevelUser
+	TrustLevelActiveUser
+	TrustLevelLeader
+)
+
+type PayLevel uint8
+
+const (
+	PayLevelFree PayLevel = iota
+	PayLevelBasic
+	PayLevelStandard
+	PayLevelPremium
+)
+
+type OrderType string
+
+const (
+	OrderTypeReceive   OrderType = "receive"
+	OrderTypePayment   OrderType = "payment"
+	OrderTypeTransfer  OrderType = "transfer"
+	OrderTypeCommunity OrderType = "community"
+)
+
+type OrderStatus string
+
+const (
+	OrderStatusSuccess   OrderStatus = "success"
+	OrderStatusFailed    OrderStatus = "failed"
+	OrderStatusPending   OrderStatus = "pending"
+	OrderStatusDisputing OrderStatus = "disputing"
+	OrderStatusRefund    OrderStatus = "refund"
+	OrderStatusRefunding OrderStatus = "refunding"
+)

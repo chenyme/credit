@@ -34,25 +34,6 @@ const (
 	UserObjKey  = "user_obj"
 )
 
-type TrustLevel uint8
-
-const (
-	TrustLevelNewUser TrustLevel = iota
-	TrustLevelBasicUser
-	TrustLevelUser
-	TrustLevelActiveUser
-	TrustLevelLeader
-)
-
-type PayLevel uint8
-
-const (
-	PayLevelFree PayLevel = iota
-	PayLevelBasic
-	PayLevelStandard
-	PayLevelPremium
-)
-
 const (
 	OAuthStateCacheKeyFormat     = "oauth:state:%s"
 	OAuthStateCacheKeyExpiration = 10 * time.Minute

@@ -22,30 +22,20 @@
  * SOFTWARE.
  */
 
-package migrator
+package model
 
-import (
-	"context"
-	"log"
+import "time"
 
-	"github.com/linux-do/pay/internal/model"
-
-	"github.com/linux-do/pay/internal/config"
-	"github.com/linux-do/pay/internal/db"
-)
-
-func Migrate() {
-	if !config.Config.Database.Enabled {
-		return
-	}
-
-	if err := db.DB(context.Background()).AutoMigrate(
-		&model.User{},
-		&model.UserPayConfig{},
-		&model.MerchantAPIKey{},
-		&model.Order{},
-	); err != nil {
-		log.Fatalf("[PostgreSQL] auto migrate failed: %v\n", err)
-	}
-	log.Printf("[PostgreSQL] auto migrate success\n")
+type MerchantAPIKey struct {
+	ID             uint64    `json:"id" gorm:"primaryKey"`
+	UserID         uint64    `json:"user_id" gorm:"not null;index"`
+	ClientID       string    `json:"client_id" gorm:"size:255;unique;index;not null"`
+	ClientSecret   string    `json:"client_secret" gorm:"size:255;not null"`
+	AppName        string    `json:"app_name" gorm:"size:20;not null"`
+	AppHomepageURL string    `json:"app_homepage_url" gorm:"size:100;not null"`
+	AppDescription string    `json:"app_description" gorm:"size:100"`
+	RedirectURI    string    `json:"redirect_uri" gorm:"size:100;not null"`
+	Status         bool      `json:"status" gorm:"default:true;index"`
+	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime;index"`
+	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime;index"`
 }
