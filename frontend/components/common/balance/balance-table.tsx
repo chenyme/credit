@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { FileTextIcon, BarChartIcon } from "lucide-react"
-import { useTransactions } from "@/hooks/use-balance"
-import type { Transaction, TransactionType } from "@/lib/services"
+import { Layers, ListRestart } from "lucide-react"
+import type { Order, OrderType, OrderStatus } from "@/lib/services"
 import { Button } from "@/components/ui/button"
 import { ErrorInline } from "@/components/common/status/error"
 import { EmptyStateWithBorder } from "@/components/common/status/empty"
@@ -20,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Skeleton } from "@/components/ui/skeleton"
+import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
 
 const TAB_TRIGGER_STYLES = "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-[#6366f1] bg-transparent rounded-none border-0 border-b-2 border-transparent px-0 text-sm font-bold text-muted-foreground data-[state=active]:text-[#6366f1] -mb-[2px] relative hover:text-foreground transition-colors flex-none"
 
@@ -34,127 +33,109 @@ const TAB_TRIGGER_STYLES = "data-[state=active]:bg-transparent data-[state=activ
  * ```
  */
 export function BalanceTable() {
-  const [activeTab, setActiveTab] = useState<TransactionType | 'all'>('all')
+  const [activeTab, setActiveTab] = useState<OrderType | 'all'>('all')
 
   return (
     <div>
       <div className="font-semibold py-4">近期活动</div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TransactionType | 'all')} className="w-full">
-        <TabsList className="flex p-0 gap-4 rounded-none w-full bg-transparent justify-start border-b border-border">
-          <TabsTrigger value="receive" className={TAB_TRIGGER_STYLES}>
-            收款
-          </TabsTrigger>
-          <TabsTrigger value="transfer" className={TAB_TRIGGER_STYLES}>
-            转账
-          </TabsTrigger>
-          <TabsTrigger value="community" className={TAB_TRIGGER_STYLES}>
-            社区划转
-          </TabsTrigger>
-          <TabsTrigger value="all" className={TAB_TRIGGER_STYLES}>
-            所有活动
-          </TabsTrigger>
-        </TabsList>
+      <TransactionProvider defaultParams={{ page_size: 20 }}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as OrderType | 'all')} className="w-full">
+          <TabsList className="flex p-0 gap-4 rounded-none w-full bg-transparent justify-start border-b border-border">
+            <TabsTrigger value="receive" className={TAB_TRIGGER_STYLES}>
+              收款
+            </TabsTrigger>
+            <TabsTrigger value="payment" className={TAB_TRIGGER_STYLES}>
+              付款
+            </TabsTrigger>
+            <TabsTrigger value="transfer" className={TAB_TRIGGER_STYLES}>
+              转账
+            </TabsTrigger>
+            <TabsTrigger value="community" className={TAB_TRIGGER_STYLES}>
+              社区划转
+            </TabsTrigger>
+            <TabsTrigger value="all" className={TAB_TRIGGER_STYLES}>
+              所有活动
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="receive" className="mt-2">
-          <TransactionListWithPagination type="receive" />
-        </TabsContent>
+          <TabsContent value="receive" className="mt-2">
+            <TransactionList type="receive" />
+          </TabsContent>
 
-        <TabsContent value="transfer" className="mt-2">
-          <TransactionListWithPagination type="transfer" />
-        </TabsContent>
+          <TabsContent value="payment" className="mt-2">
+            <TransactionList type="payment" />
+          </TabsContent>
 
-        <TabsContent value="community" className="mt-2">
-          <TransactionListWithPagination type="community" />
-        </TabsContent>
+          <TabsContent value="transfer" className="mt-2">
+            <TransactionList type="transfer" />
+          </TabsContent>
 
-        <TabsContent value="all" className="mt-2">
-          <TransactionListWithPagination />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="community" className="mt-2">
+            <TransactionList type="community" />
+          </TabsContent>
+
+          <TabsContent value="all" className="mt-2">
+            <TransactionList />
+          </TabsContent>
+        </Tabs>
+      </TransactionProvider>
     </div>
   )
 }
 
 /**
- * 带分页的交易列表组件
+ * 交易列表组件
  */
-function TransactionListWithPagination({ type }: { type?: TransactionType }) {
-  const { data, loading, error, refetch, loadMore, loadingMore } = useTransactions({
-    type,
-    page_size: 20,
-  })
+function TransactionList({ type }: { type?: OrderType }) {
+  const {
+    transactions,
+    total,
+    currentPage,
+    totalPages,
+    loading,
+    error,
+    fetchTransactions,
+    loadMore,
+  } = useTransaction()
 
-  if (loading) {
+  // 当类型变化时重新加载数据
+  useEffect(() => {
+    fetchTransactions({ page: 1, type })
+  }, [type, fetchTransactions])
+
+  // 加载更多
+  const handleLoadMore = () => {
+    loadMore()
+  }
+
+  if (loading && transactions.length === 0) {
     return (
-      <div className="bg-muted rounded-lg overflow-hidden">
-        <div className="overflow-x-auto p-2">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="whitespace-nowrap w-[180px]">订单名称</TableHead>
-                <TableHead className="whitespace-nowrap text-center w-[80px]">类型</TableHead>
-                <TableHead className="whitespace-nowrap text-right w-[120px]">订单金额</TableHead>
-                <TableHead className="whitespace-nowrap text-center w-[140px]">交易双方</TableHead>
-                <TableHead className="whitespace-nowrap text-center w-[160px]">订单号</TableHead>
-                <TableHead className="whitespace-nowrap text-center w-[160px]">商户订单号</TableHead>
-                <TableHead className="whitespace-nowrap text-center w-[120px]">订单时间</TableHead>
-                <TableHead className="whitespace-nowrap text-center w-[80px]">状态</TableHead>
-                <TableHead className="sticky right-0 whitespace-nowrap text-center bg-muted shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] w-[150px]">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...Array(10)].map((_, i) => (
-                <TableRow key={i} className="h-8">
-                  <TableCell className="py-1">
-                    <Skeleton className="h-3 w-full" />
-                  </TableCell>
-                  <TableCell className="py-1">
-                    <Skeleton className="h-4 w-12 mx-auto" />
-                  </TableCell>
-                  <TableCell className="py-1">
-                    <Skeleton className="h-3 w-16 ml-auto" />
-                  </TableCell>
-                  <TableCell className="py-1">
-                    <Skeleton className="h-4 w-20 mx-auto rounded-full" />
-                  </TableCell>
-                  <TableCell className="py-1">
-                    <Skeleton className="h-3 w-full" />
-                  </TableCell>
-                  <TableCell className="py-1">
-                    <Skeleton className="h-3 w-full" />
-                  </TableCell>
-                  <TableCell className="py-1">
-                    <Skeleton className="h-3 w-full" />
-                  </TableCell>
-                  <TableCell className="py-1">
-                    <Skeleton className="h-4 w-12 mx-auto" />
-                  </TableCell>
-                  <TableCell className="sticky right-0 bg-muted py-1">
-                    <Skeleton className="h-5 w-12 mx-auto" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+      <EmptyStateWithBorder
+        icon={ListRestart}
+        description="数据加载中"
+        loading={true}
+      />
     )
   }
 
   if (error) {
     return (
       <div className="p-8 border-2 border-dashed border-border rounded-lg">
-        <ErrorInline error={error} onRetry={refetch} className="justify-center" />
+        <ErrorInline 
+          error={error} 
+          onRetry={() => fetchTransactions({ page: 1 })} 
+          className="justify-center" 
+        />
       </div>
     )
   }
 
-  if (!data || data.items.length === 0) {
+  if (!transactions || transactions.length === 0) {
     return (
       <EmptyStateWithBorder
-        icon={type === 'transfer' ? BarChartIcon : FileTextIcon}
-        description={getEmptyMessage(type)}
+        icon={Layers}
+        description="未发现活动"
       />
     )
   }
@@ -177,29 +158,29 @@ function TransactionListWithPagination({ type }: { type?: TransactionType }) {
                 <TableHead className="sticky right-0 whitespace-nowrap text-center bg-muted shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] w-[150px]">操作</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody key={`${type}-${data.page}`} className="animate-in fade-in duration-200">
-              {data.items.map((transaction) => (
-                <TransactionTableRow key={transaction.orderNo} transaction={transaction} />
+            <TableBody className="animate-in fade-in duration-200">
+              {transactions.map((order) => (
+                <TransactionTableRow key={order.order_no} order={order} />
               ))}
             </TableBody>
           </Table>
         </div>
       </div>
 
-      {data.page < data.total_pages && (
+      {currentPage < totalPages && (
         <Button
           variant="outline"
-          onClick={loadMore}
-          disabled={loadingMore}
+          onClick={handleLoadMore}
+          disabled={loading}
           className="w-full"
         >
-          {loadingMore ? '加载中...' : `加载更多 (${data.items.length}/${data.total})`}
+          {loading ? '加载中...' : `加载更多 (${transactions.length}/${total})`}
         </Button>
       )}
 
-      {data.page >= data.total_pages && data.total > 0 && (
+      {currentPage >= totalPages && total > 0 && (
         <div className="pt-2 text-center text-xs text-muted-foreground">
-          已加载全部 {data.total} 条记录
+          已加载全部 {total} 条记录
         </div>
       )}
     </div>
@@ -209,43 +190,62 @@ function TransactionListWithPagination({ type }: { type?: TransactionType }) {
 /**
  * 交易表格行组件
  */
-function TransactionTableRow({ transaction }: { transaction: Transaction }) {
-  const typeConfig = {
+function TransactionTableRow({ order }: { order: Order }) {
+  const typeConfig: Record<OrderType, { label: string; color: string }> = {
     receive: { label: '收款', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
     payment: { label: '付款', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
     transfer: { label: '转账', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
     community: { label: '社区划转', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' }
   }
 
-  const statusConfig = {
+  const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
     success: { label: '成功', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
     pending: { label: '处理中', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
-    failed: { label: '失败', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }
+    failed: { label: '失败', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
+    disputing: { label: '争议中', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' },
+    refund: { label: '已退款', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' },
+    refunding: { label: '退款中', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' }
   }
 
-  const getAmountDisplay = (amount: number) => {
+  const getAmountDisplay = (amount: string) => {
     return (
       <span className="text-xs font-semibold">
-        {amount.toFixed(2)}
+        {parseFloat(amount).toFixed(2)}
       </span>
     )
+  }
+
+  // 格式化时间
+  const formatTime = (timeStr: string) => {
+    try {
+      const date = new Date(timeStr)
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      return timeStr
+    }
   }
 
   return (
     <TableRow className="h-8">
       <TableCell className="text-xs font-medium whitespace-nowrap py-1">
-        {transaction.orderName}
+        {order.order_name}
       </TableCell>
       <TableCell className="whitespace-nowrap text-center py-1">
         <Badge
           variant="secondary"
-          className={`text-[11px] px-1 ${typeConfig[transaction.type].color}`}
+          className={`text-[11px] px-1 ${typeConfig[order.type].color}`}
         >
-          {typeConfig[transaction.type].label}
+          {typeConfig[order.type].label}
         </Badge>
       </TableCell>
       <TableCell className="whitespace-nowrap text-right py-1">
-        {getAmountDisplay(transaction.amount)}
+        {getAmountDisplay(order.amount)}
       </TableCell>
       <TableCell className="whitespace-nowrap text-center py-1">
         <TooltipProvider>
@@ -255,14 +255,14 @@ function TransactionTableRow({ transaction }: { transaction: Transaction }) {
                 <Avatar className="h-4 w-4">
                   <AvatarImage src={undefined} />
                   <AvatarFallback className="text-[9px] bg-primary text-primary-foreground">
-                    {transaction.payer_name.substring(0, 1)}
+                    {order.payer_username.substring(0, 1)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-xs font-bold">⭢</div>
                 <Avatar className="h-4 w-4">
                   <AvatarImage src={undefined} />
                   <AvatarFallback className="text-[9px] bg-primary text-primary-foreground">
-                    {transaction.payee_name.substring(0, 1)}
+                    {order.payee_username.substring(0, 1)}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -271,11 +271,11 @@ function TransactionTableRow({ transaction }: { transaction: Transaction }) {
               <div className="space-y-2">
                 <div>
                   <p className="text-xs font-semibold">付款方</p>
-                  <p className="text-xs">账户: {transaction.payer_name}</p>
+                  <p className="text-xs">账户: {order.payer_username}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold">收款方</p>
-                  <p className="text-xs">账户: {transaction.payee_name}</p>
+                  <p className="text-xs">账户: {order.payee_username}</p>
                 </div>
               </div>
             </TooltipContent>
@@ -283,20 +283,20 @@ function TransactionTableRow({ transaction }: { transaction: Transaction }) {
         </TooltipProvider>
       </TableCell>
       <TableCell className="font-mono text-xs text-center py-1">
-        {transaction.orderNo}
+        {order.order_no}
       </TableCell>
       <TableCell className="font-mono text-xs text-center py-1">
-        {transaction.merchantOrderNo}
+        {order.merchant_order_no || '-'}
       </TableCell>
       <TableCell className="text-xs text-center py-1">
-        {transaction.time}
+        {formatTime(order.trade_time)}
       </TableCell>
       <TableCell className="whitespace-nowrap text-center py-1">
         <Badge
           variant="secondary"
-          className={`text-[11px] px-1 ${statusConfig[transaction.status].color}`}
+          className={`text-[11px] px-1 ${statusConfig[order.status].color}`}
         >
-          {statusConfig[transaction.status].label}
+          {statusConfig[order.status].label}
         </Badge>
       </TableCell>
       <TableCell className="sticky right-0 whitespace-nowrap text-center bg-muted shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] py-1">
@@ -306,17 +306,4 @@ function TransactionTableRow({ transaction }: { transaction: Transaction }) {
       </TableCell>
     </TableRow>
   )
-}
-
-/**
- * 获取空状态提示信息
- */
-function getEmptyMessage(type?: TransactionType): string {
-  const messages: Record<TransactionType, string> = {
-    receive: '未发现收款记录',
-    payment: '未发现付款记录',
-    transfer: '未发现转账记录',
-    community: '未发现社区划转记录',
-  }
-  return type ? messages[type] : '未发现活动'
 }

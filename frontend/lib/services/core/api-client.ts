@@ -32,9 +32,23 @@ const cancelTokens = new Map<string, CancelTokenSource>();
 
 /**
  * 生成请求的唯一键
+ * 包含方法、URL 和请求数据的哈希，确保不同参数的请求不会被误取消
  */
-function getRequestKey(config: { method?: string; url?: string }): string {
-  return `${config.method?.toUpperCase()}_${config.url}`;
+function getRequestKey(config: { method?: string; url?: string; data?: unknown }): string {
+  const baseKey = `${config.method?.toUpperCase()}_${config.url}`;
+  
+  // 序列化加入键中
+  if (config.data) {
+    try {
+      const dataHash = JSON.stringify(config.data);
+      return `${baseKey}_${dataHash}`;
+    } catch {
+      // 失败使用基础键
+      return baseKey;
+    }
+  }
+  
+  return baseKey;
 }
 
 /**

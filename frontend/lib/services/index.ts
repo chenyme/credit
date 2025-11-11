@@ -7,8 +7,8 @@
  * // 推荐：使用统一的 services 对象
  * import services from '@/lib/services';
  * 
- * const user = await services.auth.getCurrentUser();
- * const result = await services.auth.login({ username, password });
+ * const user = await services.auth.getUserInfo();
+ * const transactions = await services.transaction.getTransactions({ page: 1, page_size: 20 });
  * ```
  * 
  * @example
@@ -16,12 +16,12 @@
  * // 按需导入：直接导入特定服务
  * import { AuthService } from '@/lib/services';
  * 
- * const user = await AuthService.getCurrentUser();
+ * const user = await AuthService.getUserInfo();
  * ```
  */
 
 import { AuthService } from './auth';
-import { BalanceService } from './balance';
+import { TransactionService } from './transaction';
 
 /**
  * 服务对象
@@ -33,8 +33,8 @@ import { BalanceService } from './balance';
 const services = {
   /** 认证服务 */
   auth: AuthService,
-  /** 余额服务 */
-  balance: BalanceService,
+  /** 交易服务 */
+  transaction: TransactionService,
 } as const;
 
 export default services;
@@ -78,13 +78,12 @@ export type {
   OAuthCallbackRequest,
 } from './auth';
 
-// 余额服务
-export { BalanceService } from './balance';
+// 交易服务
+export { TransactionService } from './transaction';
 export type {
-  Balance,
-  Transaction,
-  TransactionType,
-  TransactionStatus,
+  Order,
+  OrderType,
+  OrderStatus,
   TransactionQueryParams,
-} from './balance';
-
+  TransactionListResponse,
+} from './transaction';

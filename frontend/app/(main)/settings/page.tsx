@@ -24,6 +24,7 @@ const settingsItems = [
   {
     title: "外观设置",
     description: "自定义界面主题和显示",
+    icon: Palette,
     href: "/settings/appearance",
   },
 ]

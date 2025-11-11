@@ -18,6 +18,8 @@ export interface EmptyStateProps {
   className?: string
   /** 图标大小 */
   iconSize?: "sm" | "md" | "lg"
+  /** 加载模式 */
+  loading?: boolean
 }
 
 /**
@@ -55,6 +57,7 @@ export function EmptyState({
   onAction,
   className,
   iconSize = "md",
+  loading = false,
 }: EmptyStateProps) {
   const iconSizes = {
     sm: "size-10",
@@ -68,30 +71,56 @@ export function EmptyState({
     lg: "size-8",
   }
 
+  // 渲染带加载动画的文字
+  const renderLoadingText = (text: string) => {
+    const chars = text.split('')
+    return (
+      <span className="inline-flex">
+        {chars.map((char, index) => (
+          <span
+            key={index}
+            className="inline-block animate-pulse opacity-80 transition-all duration-1000 ease-in-out"
+            style={{
+              animationDelay: `${index * 150}ms`,
+              animationFillMode: 'both',
+            }}
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+        ))}
+      </span>
+    )
+  }
+
   return (
     <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
       {/* 图标 */}
       <div className={cn(
         "rounded-full bg-muted flex items-center justify-center mb-4",
-        iconSizes[iconSize]
+        iconSizes[iconSize],
+        loading && "animate-pulse"
       )}>
         <Icon className={cn("text-muted-foreground", iconInnerSizes[iconSize])} />
       </div>
 
       {/* 标题 */}
       {title && (
-        <h3 className="text-base font-medium mb-1">{title}</h3>
+        <h3 className="text-base font-medium mb-1">
+          {loading ? renderLoadingText(title) : title}
+        </h3>
       )}
 
       {/* 描述 */}
       {description && (
-        <p className="text-sm text-muted-foreground max-w-md">{description}</p>
+        <p className="text-sm text-muted-foreground max-w-md">
+          {loading ? renderLoadingText(description) : description}
+        </p>
       )}
 
       {/* 操作按钮 */}
-      {onAction && actionText && (
-        <Button 
-          onClick={onAction} 
+      {onAction && actionText && !loading && (
+        <Button
+          onClick={onAction}
           variant="outline"
           className="mt-4"
         >
