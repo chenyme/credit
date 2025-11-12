@@ -35,7 +35,7 @@ export function BalanceMain() {
         <div className="lg:col-span-3 space-y-12">
           <div>
             <div className="font-semibold mb-4">余额摘要</div>
-            <BalanceSummary currency="LDC" />
+            <BalanceSummary />
           </div>
 
           <div>

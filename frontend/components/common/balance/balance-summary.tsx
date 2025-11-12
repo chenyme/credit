@@ -4,21 +4,16 @@ import * as React from "react"
 import { useUser } from "@/contexts/user-context"
 import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number"
 
-interface BalanceSummaryProps {
-  /** 货币单位 */
-  currency?: string
-}
-
 /**
  * 余额摘要组件
  * 显示余额的可视化摘要，包括未来款项和可用余额的占比
- * 
+ *
  * @example
  * ```tsx
- * <BalanceSummary currency="LDC" />
+ * <BalanceSummary />
  * ```
  */
-export function BalanceSummary({ currency = "LDC" }: BalanceSummaryProps) {
+export function BalanceSummary() {
   const { user, loading } = useUser()
 
   // 从用户信息中获取余额数据
