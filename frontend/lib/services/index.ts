@@ -22,6 +22,7 @@
 
 import { AuthService } from './auth';
 import { TransactionService } from './transaction';
+import { MerchantService } from './merchant';
 
 /**
  * 服务对象
@@ -35,6 +36,8 @@ const services = {
   auth: AuthService,
   /** 交易服务 */
   transaction: TransactionService,
+  /** 商户服务 */
+  merchant: MerchantService,
 } as const;
 
 export default services;
@@ -87,3 +90,14 @@ export type {
   TransactionQueryParams,
   TransactionListResponse,
 } from './transaction';
+
+// 商户服务
+export { MerchantService } from './merchant';
+export type {
+  MerchantAPIKey,
+  CreateAPIKeyRequest,
+  UpdateAPIKeyRequest,
+  CreateMerchantOrderRequest,
+  CreateMerchantOrderResponse,
+  PayMerchantOrderRequest,
+} from './merchant';
