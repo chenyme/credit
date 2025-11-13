@@ -23,6 +23,7 @@
 import { AuthService } from './auth';
 import { TransactionService } from './transaction';
 import { MerchantService } from './merchant';
+import { AdminService } from './admin';
 
 /**
  * 服务对象
@@ -38,6 +39,8 @@ const services = {
   transaction: TransactionService,
   /** 商户服务 */
   merchant: MerchantService,
+  /** 管理员服务 */
+  admin: AdminService,
 } as const;
 
 export default services;
@@ -102,3 +105,14 @@ export type {
   CreateMerchantOrderResponse,
   PayMerchantOrderRequest,
 } from './merchant';
+
+// 管理员服务
+export { AdminService, PayLevel } from './admin';
+export type {
+  SystemConfig,
+  CreateSystemConfigRequest,
+  UpdateSystemConfigRequest,
+  UserPayConfig,
+  CreateUserPayConfigRequest,
+  UpdateUserPayConfigRequest,
+} from './admin';
