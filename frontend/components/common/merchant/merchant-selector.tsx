@@ -32,13 +32,12 @@ export function MerchantSelector({
   loading = false,
 }: MerchantSelectorProps) {
   return (
-    <div className="flex items-center gap-3 mb-6">
       <Select
         value={selectedKeyId?.toString()}
         onValueChange={(value) => onSelect(Number(value))}
         disabled={loading || apiKeys.length === 0}
       >
-        <SelectTrigger className="w-full max-w-xs text-xs shadow-none">
+        <SelectTrigger className="w-fit text-xs shadow-none" size="sm">
           <SelectValue placeholder="请选择商户应用" />
         </SelectTrigger>
         <SelectContent>
@@ -56,7 +55,6 @@ export function MerchantSelector({
           ))}
         </SelectContent>
       </Select>
-    </div>
   )
 }
 

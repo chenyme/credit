@@ -3,7 +3,6 @@
 import * as React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,14 +14,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Copy, Eye, EyeOff, Trash2, ExternalLink } from "lucide-react"
+import { Copy, Eye, EyeOff, Trash2, ExternalLink, Edit } from "lucide-react"
 import { toast } from "sonner"
-import type { MerchantAPIKey } from "@/lib/services"
+import { type MerchantAPIKey } from "@/lib/services"
+import { MerchantDialog } from "./merchant-dialog"
 import Link from "next/link"
 
 interface MerchantInfoProps {
   /** 当前选中的 API Key */
   apiKey: MerchantAPIKey
+  /** 更新回调 */
+  onUpdate: (updatedKey: MerchantAPIKey) => void
   /** 删除回调 */
   onDelete: (id: number) => void
 }
@@ -31,7 +33,7 @@ interface MerchantInfoProps {
  * 商户信息组件
  * 显示商户的凭证信息（Client ID 和 Secret）
  */
-export function MerchantInfo({ apiKey, onDelete }: MerchantInfoProps) {
+export function MerchantInfo({ apiKey, onUpdate, onDelete }: MerchantInfoProps) {
   const [showClientId, setShowClientId] = useState(false)
   const [showClientSecret, setShowClientSecret] = useState(false)
 
@@ -63,62 +65,65 @@ export function MerchantInfo({ apiKey, onDelete }: MerchantInfoProps) {
   return (
     <div className="space-y-4 sticky top-6">
       <div>
-        <h2 className="text-sm font-semibold mb-3">应用信息</h2>
-        <div className="border rounded-lg divide-y">
-          <div className="px-3 py-2 flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">应用名称</label>
-            <p className="text-xs text-muted-foreground truncate">{apiKey.app_name}</p>
+        <h2 className="font-semibold mb-4">应用信息</h2>
+        <div className="border border-dashed rounded-lg">
+          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
+            <label className="text-xs font-medium text-muted-foreground">应用名称</label>
+            <p className="text-xs text-muted-foreground truncate text-right max-w-[70%]">{apiKey.app_name}</p>
           </div>
 
           {apiKey.app_description && (
-            <div className="px-3 py-2 flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground block mb-1">应用描述</label>
-              <p className="text-xs text-muted-foreground truncate">{apiKey.app_description}</p>
+            <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
+              <label className="text-xs font-medium text-muted-foreground">应用描述</label>
+              <p className="text-xs text-muted-foreground truncate text-right max-w-[70%]">{apiKey.app_description}</p>
             </div>
           )}
 
-          <div className="px-3 py-2 flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">创建时间</label>
-            <p className="text-xs text-muted-foreground">{formatDate(apiKey.created_at)}</p>
+          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
+            <label className="text-xs font-medium text-muted-foreground">创建时间</label>
+            <p className="text-xs text-muted-foreground text-right max-w-[70%]">{formatDate(apiKey.created_at)}</p>
           </div>
 
-          <div className="px-3 py-2 flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">应用地址</label>
+          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
+            <label className="text-xs font-medium text-muted-foreground">应用地址</label>
             <Link
               href={apiKey.app_homepage_url}
               target="_blank"
-              className="text-xs text-[#6366f1] hover:underline flex items-center gap-1 break-all"
+              className="text-xs text-[#6366f1] hover:underline flex items-center gap-1 text-right max-w-[70%]"
             >
-              {apiKey.app_homepage_url}
-              <ExternalLink className="h-3 w-3 shrink-0" />
+              <span className="truncate flex-1 min-w-0">
+                {apiKey.app_homepage_url}
+              </span>
+              <ExternalLink className="h-3 w-3 flex-shrink-0 ml-1" />
             </Link>
           </div>
 
           <div className="px-3 py-2 flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">回调 URI</label>
+            <label className="text-xs font-medium text-muted-foreground">回调 URI</label>
             <Link
               href={apiKey.redirect_uri}
               target="_blank"
-              className="text-xs text-[#6366f1] hover:underline flex items-center gap-1 break-all"
+              className="text-xs text-[#6366f1] hover:underline flex items-center gap-1 text-right max-w-[70%]"
             >
-              {apiKey.redirect_uri}
-              <ExternalLink className="h-3 w-3 shrink-0" />
+              <span className="truncate flex-1 min-w-0">
+                {apiKey.redirect_uri}
+              </span>
+              <ExternalLink className="h-3 w-3 flex-shrink-0 ml-1" />
             </Link>
           </div>
-
         </div>
       </div>
 
       <div>
-        <h2 className="text-sm font-semibold mb-3">API 凭证</h2>
-        <div className="border rounded-lg px-3 py-2 space-y-4">
+        <h2 className="font-semibold mb-4">API 凭证</h2>
+        <div className="border border-dashed rounded-lg px-3 py-2 space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium">Client ID</label>
+              <label className="text-xs font-medium text-muted-foreground">Client ID</label>
               <span className="text-[10px] text-muted-foreground">客户端标识</span>
             </div>
-            <div className="flex items-center bg-muted/50 pl-2 h-8">
-              <code className="text-[10px] font-mono flex-1 overflow-x-auto leading-relaxed">
+            <div className="flex items-center p-2 h-8 border border-dashed rounded-sm bg-background">
+              <code className="text-xs text-muted-foreground font-mono flex-1 overflow-x-auto leading-relaxed p-1">
                 {showClientId ? apiKey.client_id : maskText(apiKey.client_id, 8)}
               </code>
               <Button
@@ -126,29 +131,25 @@ export function MerchantInfo({ apiKey, onDelete }: MerchantInfoProps) {
                 className="p-1 w-6 h-6"
                 onClick={() => setShowClientId(!showClientId)}
               >
-                {showClientId ? (
-                  <EyeOff className="size-3" />
-                ) : (
-                  <Eye className="size-3" />
-                )}
+                {showClientId ? <EyeOff className="size-3 text-muted-foreground" /> : <Eye className="size-3 text-muted-foreground" />}
               </Button>
               <Button
                 variant="ghost"
                 className="p-1 w-6 h-6"
                 onClick={() => copyToClipboard(apiKey.client_id, 'Client ID')}
               >
-                <Copy className="size-3" />
+                <Copy className="size-3 text-muted-foreground" />
               </Button>
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium">Client Secret</label>
+              <label className="text-xs font-medium text-muted-foreground">Client Secret</label>
               <span className="text-[10px] text-muted-foreground">客户端密钥</span>
             </div>
-            <div className="flex items-center bg-muted/50 pl-2 h-8">
-              <code className="text-[10px] font-mono flex-1 overflow-x-auto">
+            <div className="flex items-center p-2 h-8 border border-dashed rounded-sm bg-background">
+              <code className="text-xs text-muted-foreground font-mono flex-1 overflow-x-auto p-1">
                 {showClientSecret ? apiKey.client_secret : '•'.repeat(40)}
               </code>
               <Button
@@ -156,11 +157,7 @@ export function MerchantInfo({ apiKey, onDelete }: MerchantInfoProps) {
                 className="p-1 w-6 h-6"
                 onClick={() => setShowClientSecret(!showClientSecret)}
               >
-                {showClientSecret ? (
-                  <EyeOff className="size-3" />
-                ) : (
-                  <Eye className="size-3" />
-                )}
+                {showClientSecret ? <EyeOff className="size-3 text-muted-foreground" /> : <Eye className="size-3 text-muted-foreground" />}
               </Button>
               <Button
                 variant="ghost"
@@ -174,40 +171,51 @@ export function MerchantInfo({ apiKey, onDelete }: MerchantInfoProps) {
         </div>
       </div>
 
-      {/* 危险操作 */}
       <div>
-        <h2 className="text-sm font-semibold mb-3">删除应用</h2>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="destructive"
-              className="text-xs h-7"
-            >
-              <Trash2 className="size-3" />
-              删除
-            </Button>
-          </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认删除应用</AlertDialogTitle>
-            <AlertDialogDescription>
-              确定要删除应用 "{apiKey.app_name}" 吗？
-              此操作将永久删除该应用的所有凭证和配置，且无法恢复。
-              使用此应用凭证的所有集成将立即失效。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => onDelete(apiKey.id)}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              确认删除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        <h2 className="text-sm font-semibold mb-3">应用管理</h2>
+        <div className="flex gap-2">
+          <MerchantDialog
+            mode="update"
+            apiKey={apiKey}
+            onSuccess={() => {}}
+            onUpdate={onUpdate}
+            trigger={
+              <Button variant="outline" className="text-xs text-primary h-7 border-dashed border-primary/50">
+                <Edit className="size-3 mr-1" />
+                编辑应用
+              </Button>
+            }
+          />
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="text-xs text-destructive h-7 border-dashed border-destructive/50">
+                <Trash2 className="size-3 mr-1" />
+                删除应用
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确认删除应用</AlertDialogTitle>
+                <AlertDialogDescription>
+                  确定要删除应用 &ldquo;{apiKey.app_name}&rdquo; 吗？
+                  此操作将永久删除该应用的所有凭证和配置，且无法恢复。
+                  使用此应用凭证的所有集成将立即失效。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDelete(apiKey.id)}
+                  className="bg-destructive hover:bg-destructive/90"
+                >
+                  确认删除
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
   </div>
   )
 }

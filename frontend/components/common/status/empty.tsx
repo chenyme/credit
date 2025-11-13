@@ -137,7 +137,7 @@ export function EmptyState({
  */
 export function EmptyStateWithBorder(props: EmptyStateProps) {
   return (
-    <div className="border-2 border-dashed border-border rounded-lg">
+    <div className="border border-dashed rounded-lg">
       <EmptyState {...props} />
     </div>
   )

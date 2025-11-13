@@ -29,6 +29,7 @@ export const statusConfig: Record<OrderStatus, { label: string; color: string }>
   success: { label: '成功', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
   pending: { label: '处理中', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
   failed: { label: '失败', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
+  expired: { label: '已过期', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' },
   disputing: { label: '争议中', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' },
   refund: { label: '已退款', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' },
   refunding: { label: '退款中', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' }
@@ -49,10 +50,10 @@ export const timeRangeOptions = [
     from.setDate(from.getDate() - 7)
     return { from, to }
   }},
-  { label: "最近 4 周", getValue: () => {
+  { label: "最近 1 个月", getValue: () => {
     const to = new Date()
     const from = new Date()
-    from.setDate(from.getDate() - 28)
+    from.setDate(from.getDate() - 30)
     return { from, to }
   }},
   { label: "最近 6 个月", getValue: () => {
@@ -181,7 +182,7 @@ export function TableFilter({
         {enabledFilters.timeRange && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="!h-6 !min-h-6 text-xs font-bold rounded-full border border-muted-foreground/20 shadow-none !px-2.5 !py-1 gap-2 inline-flex items-center w-auto hover:bg-accent">
+              <button className="!h-6 !min-h-6 text-xs font-bold rounded-full border border-dashed shadow-none !px-2.5 !py-1 gap-2 inline-flex items-center w-auto hover:bg-accent">
                 <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                 <span className="text-muted-foreground text-xs font-bold">时间区间</span>
                 {selectedQuickSelection && (
@@ -233,7 +234,7 @@ export function TableFilter({
           variant="ghost"
           size="sm"
           onClick={onClearAll}
-          className="h-6 px-2.5 text-xs font-bold rounded-full border border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 gap-1 self-start sm:self-auto"
+          className="h-6 px-2.5 text-xs font-bold rounded-full border border-dashed text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 gap-1 self-start sm:self-auto"
         >
           <X className="h-3 w-3" />
           清空筛选
@@ -260,7 +261,7 @@ function FilterSelect<T extends string>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className={`!h-6 !min-h-6 text-xs font-bold rounded-full border shadow-none !px-2.5 !py-1 gap-2 inline-flex items-center w-auto hover:bg-accent ${
+        <button className={`!h-6 !min-h-6 text-xs font-bold rounded-full border border-dashed shadow-none !px-2.5 !py-1 gap-2 inline-flex items-center w-auto hover:bg-accent ${
           selectedValues.length > 0
             ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
             : 'border-muted-foreground/20'

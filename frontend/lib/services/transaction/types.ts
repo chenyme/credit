@@ -6,7 +6,7 @@ export type OrderType = 'receive' | 'payment' | 'transfer' | 'community';
 /**
  * 订单状态
  */
-export type OrderStatus = 'success' | 'pending' | 'failed' | 'disputing' | 'refund' | 'refunding';
+export type OrderStatus = 'success' | 'pending' | 'failed' | 'expired' | 'disputing' | 'refund' | 'refunding';
 
 /**
  * 订单信息
@@ -40,6 +40,14 @@ export interface Order {
   created_at: string;
   /** 更新时间 */
   updated_at: string;
+  /** 应用名称（可选） */
+  app_name?: string;
+  /** 应用主页 URL（可选） */
+  app_homepage_url?: string;
+  /** 应用描述（可选） */
+  app_description?: string;
+  /** 重定向 URI（可选） */
+  redirect_uri?: string;
 }
 
 /**
@@ -54,6 +62,8 @@ export interface TransactionQueryParams {
   type?: OrderType;
   /** 订单状态（可选） */
   status?: OrderStatus;
+  /** 客户端 ID（可选） */
+  client_id?: string;
   /** 开始时间（可选） */
   startTime?: string;
   /** 结束时间（可选） */

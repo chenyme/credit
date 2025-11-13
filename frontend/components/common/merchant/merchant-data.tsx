@@ -1,8 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, CreditCard } from "lucide-react"
-import type { MerchantAPIKey } from "@/lib/services"
+import { useEffect } from "react"
+import { RefreshCw, Undo2, FileText, Settings, BarChart3, Zap } from "lucide-react"
+import type { MerchantAPIKey, OrderType, OrderStatus } from "@/lib/services"
+import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
+import { TransactionDataTable } from "@/components/common/general/table-data"
+import { TableFilter } from "@/components/common/general/table-filter"
+import { Button } from "@/components/ui/button"
+import { ErrorInline } from "@/components/common/status/error"
+import { EmptyStateWithBorder } from "@/components/common/status/empty"
+import { Spinner } from "@/components/ui/spinner"
+import { Layers, ListRestart } from "lucide-react"
 
 interface MerchantDataProps {
   /** 当前选中的 API Key */
@@ -14,179 +23,253 @@ interface MerchantDataProps {
  * 显示应用的收款数据和统计信息
  */
 export function MerchantData({ apiKey }: MerchantDataProps) {
-  // 模拟数据 - 实际应该从 API 获取
-  const stats = [
-    {
-      title: "总收款金额",
-      value: "¥128,456.78",
-      change: "+12.5%",
-      trend: "up" as const,
-      icon: DollarSign,
-      color: "text-green-600",
-      bgColor: "bg-green-50 dark:bg-green-950/20",
-    },
-    {
-      title: "订单总数",
-      value: "1,234",
-      change: "+8.2%",
-      trend: "up" as const,
-      icon: ShoppingCart,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50 dark:bg-blue-950/20",
-    },
-    {
-      title: "成功率",
-      value: "98.5%",
-      change: "+2.1%",
-      trend: "up" as const,
-      icon: CreditCard,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50 dark:bg-purple-950/20",
-    },
-    {
-      title: "活跃用户",
-      value: "856",
-      change: "-3.2%",
-      trend: "down" as const,
-      icon: Users,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-950/20",
-    },
-  ]
+  // 计算最近一个月的时间范围
+  const getLastMonthRange = () => {
+    const now = new Date()
+    const endTime = now.toISOString()
+    const startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    return { startTime, endTime }
+  }
 
-  const recentOrders = [
-    {
-      id: "ORD-2024-001",
-      amount: "¥299.00",
-      status: "success",
-      time: "2分钟前",
-      customer: "用户 A",
-    },
-    {
-      id: "ORD-2024-002",
-      amount: "¥1,299.00",
-      status: "success",
-      time: "15分钟前",
-      customer: "用户 B",
-    },
-    {
-      id: "ORD-2024-003",
-      amount: "¥599.00",
-      status: "pending",
-      time: "1小时前",
-      customer: "用户 C",
-    },
-    {
-      id: "ORD-2024-004",
-      amount: "¥899.00",
-      status: "success",
-      time: "2小时前",
-      customer: "用户 D",
-    },
-    {
-      id: "ORD-2024-005",
-      amount: "¥199.00",
-      status: "failed",
-      time: "3小时前",
-      customer: "用户 E",
-    },
-  ]
+  const { startTime, endTime } = getLastMonthRange()
 
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      success: { label: "成功", class: "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400" },
-      pending: { label: "处理中", class: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400" },
-      failed: { label: "失败", class: "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400" },
+  return (
+    <TransactionProvider
+      defaultParams={{
+        page_size: 20,
+        startTime,
+        endTime,
+        client_id: apiKey.client_id
+      }}
+    >
+      <MerchantDataContent apiKey={apiKey} />
+    </TransactionProvider>
+  )
+}
+
+/**
+ * 商户数据内容组件
+ */
+function MerchantDataContent({ apiKey }: MerchantDataProps) {
+  const {
+    transactions,
+    total,
+    currentPage,
+    totalPages,
+    loading,
+    error,
+    fetchTransactions,
+    loadMore,
+  } = useTransaction()
+
+  // 筛选状态
+  const [selectedTypes, setSelectedTypes] = React.useState<OrderType[]>([])
+  const [selectedStatuses, setSelectedStatuses] = React.useState<OrderStatus[]>([])
+  const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>("最近 1 个月")
+  const [dateRange, setDateRange] = React.useState<{ from: Date; to: Date } | null>(() => {
+    const now = new Date()
+    const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    return { from, to: now }
+  })
+
+  // 清空所有筛选
+  const clearAllFilters = () => {
+    setSelectedTypes([])
+    setSelectedStatuses([])
+    const now = new Date()
+    const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    setDateRange({ from, to: now })
+    setSelectedQuickSelection("最近 1 个月")
+  }
+
+  // 当筛选条件或 API key 改变时，重新加载数据
+  useEffect(() => {
+    const params = {
+      page: 1,
+      page_size: 20,
+      type: selectedTypes.length > 0 ? selectedTypes[0] as OrderType : undefined,
+      status: selectedStatuses.length > 0 ? selectedStatuses[0] as OrderStatus : undefined,
+      startTime: dateRange ? dateRange.from.toISOString() : undefined,
+      endTime: dateRange ? dateRange.to.toISOString() : undefined,
+      client_id: apiKey.client_id,
     }
-    const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.pending
+
+    fetchTransactions(params)
+  }, [fetchTransactions, dateRange, selectedTypes, selectedStatuses, apiKey.client_id])
+
+  // 加载更多
+  const handleLoadMore = () => {
+    loadMore()
+  }
+
+  // 渲染内容
+  const renderContent = () => {
+    if (loading && transactions.length === 0) {
+      return (
+        <EmptyStateWithBorder
+          icon={ListRestart}
+          description="数据加载中"
+          loading={true}
+        />
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="p-8 border-2 border-dashed border-border rounded-lg">
+          <ErrorInline
+            error={error}
+            onRetry={() => fetchTransactions({ page: 1, client_id: apiKey.client_id })}
+            className="justify-center"
+          />
+        </div>
+      )
+    }
+
+    if (!transactions || transactions.length === 0) {
+      return (
+        <EmptyStateWithBorder
+          icon={Layers}
+          description="未发现交易记录"
+        />
+      )
+    }
+
     return (
-      <span className={`text-xs px-2 py-1 rounded-full ${statusInfo.class}`}>
-        {statusInfo.label}
-      </span>
+      <>
+        <TransactionDataTable transactions={transactions} />
+
+        {currentPage < totalPages && (
+          <Button
+            variant="outline"
+            onClick={handleLoadMore}
+            disabled={loading}
+            className="w-full text-xs border-dashed"
+          >
+            {loading ? (
+              <>
+                <Spinner className="size-4" />
+                正在加载
+              </>
+            ) : (
+              `加载更多 (${transactions.length}/${total})`
+            )}
+          </Button>
+        )}
+
+        {currentPage >= totalPages && total > 0 && (
+          <div className="pt-2 text-center text-xs text-muted-foreground">
+            已加载全部 {total} 条记录
+          </div>
+        )}
+      </>
     )
   }
+
+  const merchantActions = [
+    {
+      title: "处理退款",
+      description: "为客户办理退款操作",
+      icon: Undo2,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50 dark:bg-orange-950/20",
+      action: "refund",
+    },
+    {
+      title: "查看订单",
+      description: "查看详细的订单信息",
+      icon: FileText,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50 dark:bg-blue-950/20",
+      action: "view-order",
+    },
+    {
+      title: "刷新数据",
+      description: "同步最新的交易数据",
+      icon: RefreshCw,
+      color: "text-green-600",
+      bgColor: "bg-green-50 dark:bg-green-950/20",
+      action: "refresh",
+    },
+    {
+      title: "API 设置",
+      description: "配置 Webhook 和通知",
+      icon: Settings,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50 dark:bg-purple-950/20",
+      action: "settings",
+    },
+    {
+      title: "数据报表",
+      description: "查看详细的统计报表",
+      icon: BarChart3,
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50 dark:bg-indigo-950/20",
+      action: "reports",
+    },
+    {
+      title: "快速测试",
+      description: "创建测试订单验证集成",
+      icon: Zap,
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
+      action: "test",
+    },
+  ]
+
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-sm font-semibold mb-3">数据概览</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon
-            const TrendIcon = stat.trend === "up" ? TrendingUp : TrendingDown
-            const trendColor = stat.trend === "up" ? "text-green-600" : "text-red-600"
+        <h2 className="font-semibold mb-4">商家操作</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {merchantActions.map((action, index) => {
+            const Icon = action.icon
 
             return (
-              <div key={index} className="rounded-lg p-4 bg-muted/50">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`rounded-lg ${stat.bgColor}`}>
-                    <Icon className={`h-4 w-4 ${stat.color}`} />
+              <button
+                key={index}
+                className="rounded-lg p-4 border border-dashed hover:border-primary/50 shadow-nonetransition-all text-left group"
+                onClick={() => {
+                  console.log('Action clicked:', action.action)
+                }}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`rounded-lg p-2 ${action.bgColor}`}>
+                    <Icon className={`h-4 w-4 ${action.color}`} />
                   </div>
-                  <div className={`flex items-center gap-1 text-xs ${trendColor}`}>
-                    <TrendIcon className="h-3.5 w-3.5" />
-                    <span className="font-medium">{stat.change}</span>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm group-hover:text-foreground">{action.title}</h3>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{stat.title}</p>
-                  <p className="text-xl font-bold">{stat.value}</p>
-                </div>
-              </div>
+                <p className="text-xs text-muted-foreground">{action.description}</p>
+              </button>
             )
           })}
         </div>
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold">最近订单</h2>
-        </div>
-        <div className="border rounded-lg">
-          <div className="divide-y">
-            {recentOrders.map((order, index) => (
-              <div
-                key={index}
-                className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{order.id}</p>
-                    <p className="text-xs text-muted-foreground">{order.customer} · {order.time}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-semibold text-sm">{order.amount}</p>
-                  </div>
-                </div>
-                <div className="ml-4 shrink-0">
-                  {getStatusBadge(order.status)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+        <h2 className="font-semibold mb-4">交易记录</h2>
+        <div className="space-y-2">
+          <TableFilter
+            enabledFilters={{
+              type: true,
+              status: true,
+              timeRange: true
+            }}
+            selectedTypes={selectedTypes}
+            selectedStatuses={selectedStatuses}
+            selectedTimeRange={dateRange}
+            selectedQuickSelection={selectedQuickSelection}
+            onTypeChange={setSelectedTypes}
+            onStatusChange={setSelectedStatuses}
+            onTimeRangeChange={setDateRange}
+            onQuickSelectionChange={setSelectedQuickSelection}
+            onClearAll={clearAllFilters}
+          />
 
-      <div>
-        <h2 className="text-sm font-semibold mb-3">快速操作</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="border rounded-lg p-5 text-left hover:border-[#6366f1] hover:bg-[#6366f1]/5 transition-all group">
-            <h3 className="font-medium text-sm mb-1.5 group-hover:text-[#6366f1]">创建测试订单</h3>
-            <p className="text-xs text-muted-foreground">
-              快速创建一个测试订单来验证集成
-            </p>
-          </button>
-          <button className="border rounded-lg p-5 text-left hover:border-[#6366f1] hover:bg-[#6366f1]/5 transition-all group">
-            <h3 className="font-medium text-sm mb-1.5 group-hover:text-[#6366f1]">查看日志</h3>
-            <p className="text-xs text-muted-foreground">
-              查看 API 请求日志和错误信息
-            </p>
-          </button>
-          <button className="border rounded-lg p-5 text-left hover:border-[#6366f1] hover:bg-[#6366f1]/5 transition-all group">
-            <h3 className="font-medium text-sm mb-1.5 group-hover:text-[#6366f1]">下载报表</h3>
-            <p className="text-xs text-muted-foreground">
-              导出交易数据和财务报表
-            </p>
-          </button>
+          {renderContent()}
         </div>
       </div>
     </div>

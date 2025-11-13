@@ -86,9 +86,10 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     // 生成缓存key
     const typeKey = queryParams.type || 'all'
     const statusKey = queryParams.status || 'all'
+    const clientIdKey = queryParams.client_id || 'all'
     const startTimeKey = queryParams.startTime || 'no-start'
     const endTimeKey = queryParams.endTime || 'no-end'
-    const cacheKey = `${typeKey}_${statusKey}_${queryParams.page}_${queryParams.page_size}_${startTimeKey}_${endTimeKey}`
+    const cacheKey = `${typeKey}_${statusKey}_${clientIdKey}_${queryParams.page}_${queryParams.page_size}_${startTimeKey}_${endTimeKey}`
 
     // 检查缓存（缓存5分钟）
     const cached = cacheRef.current[cacheKey]
@@ -122,7 +123,6 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     }
 
     try {
-      // 确保至少显示300ms的loading状态，避免闪烁
       const [result] = await Promise.all([
         services.transaction.getTransactions(queryParams),
         new Promise(resolve => setTimeout(resolve, 300))
@@ -132,7 +132,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
         return
       }
 
-      // 如果是第一页，替换数据并更新缓存；否则追加数据
+      // 替换数据并更新缓存；否则追加数据
       if (queryParams.page === 1) {
         setTransactions(result.orders)
         cacheRef.current[cacheKey] = {
@@ -181,15 +181,16 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
   }, [currentPage, fetchTransactions, lastParams, loading])
 
   /**
-   * 刷新当前页（清除缓存）
+   * 刷新当前页
    */
   const refresh = useCallback(async () => {
-    // 清除相关缓存（包含所有参数）
+    // 清除相关缓存
     const typeKey = lastParams.type || 'all'
     const statusKey = lastParams.status || 'all'
+    const clientIdKey = lastParams.client_id || 'all'
     const startTimeKey = lastParams.startTime || 'no-start'
     const endTimeKey = lastParams.endTime || 'no-end'
-    const cacheKey = `${typeKey}_${statusKey}_1_${pageSize}_${startTimeKey}_${endTimeKey}`
+    const cacheKey = `${typeKey}_${statusKey}_${clientIdKey}_1_${pageSize}_${startTimeKey}_${endTimeKey}`
     delete cacheRef.current[cacheKey]
 
     await fetchTransactions({

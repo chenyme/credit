@@ -4,7 +4,6 @@ import {
   ApiErrorBase,
   NetworkError,
   TimeoutError,
-  UnauthorizedError,
   ForbiddenError,
   NotFoundError,
   ServerError,
@@ -114,9 +113,9 @@ apiClient.interceptors.response.use(
 
     // 请求被取消时静默处理
     if (axios.isCancel(error)) {
-      // 创建一个特殊的取消错误对象，包含标识
-      const cancelError = new Error(error.message || '请求已被取消');
-      (cancelError as any).__CANCEL__ = true;
+      // 特殊的取消错误对象
+      const cancelError = new Error(error.message || '请求已被取消') as Error & { __CANCEL__?: boolean };
+      cancelError.__CANCEL__ = true;
       return Promise.reject(cancelError);
     }
 
