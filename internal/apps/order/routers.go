@@ -82,15 +82,30 @@ func ListTransactions(c *gin.Context) {
 		Joins("LEFT JOIN merchant_api_keys ON orders.client_id = merchant_api_keys.client_id").
 		Joins("LEFT JOIN disputes ON orders.id = disputes.order_id").
 		Joins("LEFT JOIN users as payer_user ON orders.payer_user_id = payer_user.id").
-		Joins("LEFT JOIN users as payee_user ON orders.payee_user_id = payee_user.id").
-		Where("orders.payee_user_id = ? OR orders.payer_user_id = ?", user.ID, user.ID)
+		Joins("LEFT JOIN users as payee_user ON orders.payee_user_id = payee_user.id")
+
+	if req.Type != "" {
+		orderType := model.OrderType(req.Type)
+
+		switch orderType {
+		case model.OrderTypeReceive:
+			// receive 类型：查询当前用户作为收款方的所有订单
+			baseQuery = baseQuery.Where("orders.payee_user_id = ?", user.ID)
+		case model.OrderTypeCommunity:
+			// community 类型：查询当前用户作为收款方的 community 订单
+			baseQuery = baseQuery.Where("orders.type = ? AND orders.payee_user_id = ?", orderType, user.ID)
+		case model.OrderTypePayment, model.OrderTypeTransfer:
+			// payment 和 transfer 类型：查询当前用户作为付款方的订单
+			baseQuery = baseQuery.Where("orders.type = ? AND orders.payer_user_id = ?", orderType, user.ID)
+		}
+	} else {
+		baseQuery = baseQuery.Where("orders.payee_user_id = ? OR orders.payer_user_id = ?", user.ID, user.ID)
+	}
 
 	if req.Status != "" {
 		baseQuery = baseQuery.Where("orders.status = ?", model.OrderStatus(req.Status))
 	}
-	if req.Type != "" {
-		baseQuery = baseQuery.Where("orders.type = ?", model.OrderType(req.Type))
-	}
+
 	if req.ClientID != "" {
 		baseQuery = baseQuery.Where("orders.client_id = ?", req.ClientID)
 	}
