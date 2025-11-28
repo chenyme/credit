@@ -27,6 +27,7 @@ package dispute
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -236,6 +237,8 @@ func CreateDispute(c *gin.Context) {
 			c.JSON(http.StatusNotFound, util.Err(OrderNotFoundForDispute))
 		} else if errMsg == DisputeTimeWindowExpired {
 			c.JSON(http.StatusBadRequest, util.Err(DisputeTimeWindowExpired))
+		} else if strings.Contains(errMsg, "SQLSTATE 23505") {
+			c.JSON(http.StatusBadRequest, util.Err(DuplicateDispute))
 		} else {
 			c.JSON(http.StatusInternalServerError, util.Err(errMsg))
 		}
