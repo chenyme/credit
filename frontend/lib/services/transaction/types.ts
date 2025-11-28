@@ -90,3 +90,15 @@ export interface TransactionListResponse {
   orders: Order[];
 }
 
+
+/**
+ * 创建争议请求
+ */
+export interface CreateDisputeRequest {
+  /** 订单号 */
+  order_no: string;
+  /** 争议原因 */
+  reason: string;
+  /** 详细描述（可选） */
+  description?: string;
+}

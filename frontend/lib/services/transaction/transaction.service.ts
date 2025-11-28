@@ -28,5 +28,12 @@ export class TransactionService extends BaseService {
   static async getTransactions(params: TransactionQueryParams): Promise<TransactionListResponse> {
     return this.post<TransactionListResponse>('/transactions', params);
   }
+  /**
+   * 创建争议
+   * @param data - 争议信息
+   */
+  static async createDispute(data: { order_no: string; reason: string; description?: string }): Promise<void> {
+    return this.post('/dispute', data);
+  }
 }
 

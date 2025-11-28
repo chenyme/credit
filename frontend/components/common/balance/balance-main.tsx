@@ -15,16 +15,15 @@ import { useUser } from "@/contexts/user-context"
 export function BalanceMain() {
   const { user, loading } = useUser()
 
-  // 计算总余额
+  /** 计算总余额 */
   const totalBalance = React.useMemo(() => {
     return (user?.available_balance ?? 0) + (user?.community_balance ?? 0)
   }, [user?.available_balance, user?.community_balance])
 
   return (
     <div className="py-6">
-      {/* 页面标题和总余额 */}
-      <div className="flex items-center gap-2 border-b border-border pb-2">
-        <h1 className="text-2xl">
+      <div className="flex items-center gap-2  pb-2">
+        <h1 className="text-3xl">
           <span className="font-semibold">余额</span>
           <span className="pl-2">LDC</span>
           <span className="pl-2">
@@ -33,24 +32,19 @@ export function BalanceMain() {
         </h1>
       </div>
 
-      {/* 主内容区域 */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 pt-4">
-        {/* 左侧主要内容 */}
-        <div className="lg:col-span-3 space-y-12">
-          {/* 余额摘要 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-4">
+        <div className="lg:col-span-2 space-y-12">
           <section>
             <div className="font-semibold mb-4">余额摘要</div>
             <BalanceSummary />
           </section>
 
-          {/* 近期活动 */}
           <section>
-            <div className="font-semibold mb-4">近期活动</div>
+            <div className="font-semibold mb-2">近期活动</div>
             <BalanceTable />
           </section>
         </div>
 
-        {/* 右侧报告栏 */}
         <aside className="lg:col-span-1">
           <BalanceReport />
         </aside>

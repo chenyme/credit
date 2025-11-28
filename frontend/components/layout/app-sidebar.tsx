@@ -102,7 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           onClick={toggleSidebar}
           variant="ghost"
           size="icon"
-          className="absolute top-1/2 -right-6 w-2 h-4 text-muted-foreground hover:bg-background"
+          className="absolute top-1/2 -right-6 w-2 h-4 text-muted-foreground hover:bg-background hidden md:flex"
         >
           {state === "expanded" ? (
             <AnimateIcon animateOnHover>

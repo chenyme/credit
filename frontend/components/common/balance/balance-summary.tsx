@@ -69,30 +69,30 @@ export function BalanceSummary() {
 
       {/* 余额详情列表 */}
       <div className="space-y-2">
-        <div className="flex justify-between items-center text-xs font-medium pb-2 border-b">
+        <div className="flex justify-between items-center text-xs font-medium pb-2 border-b border-border/80">
           <span>支付类型</span>
-          <span>金额</span>
+          <span className="text-muted-foreground">金额</span>
         </div>
 
         {/* 可用余额 */}
-        <div className="flex justify-between items-center font-bold text-sm pb-2 border-b border-border/50">
+        <div className="flex justify-between items-center font-bold text-sm pb-2 border-b border-border/80">
           <div className="flex items-center gap-2">
-            <div className={`size-3 ${COLORS.available} rounded-xs`} aria-hidden="true" />
+            <div className={`size-2.5 ${COLORS.available} rounded-xs`} aria-hidden="true" />
             <span>可用</span>
           </div>
-          <span>
-            {loading ? "-" : <CountingNumber number={available} decimalPlaces={2} />}
+          <span className="font-semibold">
+            {loading ? "-" : <CountingNumber number={available} decimalPlaces={2} />} LDC
           </span>
         </div>
 
         {/* 未来款项 */}
-        <div className="flex justify-between items-center font-bold text-sm pb-2 border-border/50">
+        <div className="flex justify-between items-center font-bold text-sm pb-2 border-b border-border/80">
           <div className="flex items-center gap-2">
-            <div className={`size-3 ${COLORS.pending} rounded-xs`} aria-hidden="true" />
+            <div className={`size-2.5 ${COLORS.pending} rounded-xs`} aria-hidden="true" />
             <span>未来款项</span>
           </div>
-          <span>
-            {loading ? "-" : <CountingNumber number={pending} decimalPlaces={2} />}
+          <span className="font-semibold">
+            {loading ? "-" : <CountingNumber number={pending} decimalPlaces={2} />} LDC
           </span>
         </div>
       </div>
