@@ -319,13 +319,14 @@ func RefundReview(c *gin.Context) {
 					UpdateColumns(map[string]interface{}{
 						"available_balance": gorm.Expr("available_balance + ?", order.Amount),
 						"total_payment":     gorm.Expr("total_payment - ?", order.Amount),
+						"pay_score":         gorm.Expr("pay_score - ?", order.Amount.Round(0).IntPart()),
 					}).Error; err != nil {
 					return err
 				}
 
 				if err := tx.Model(&model.Dispute{}).
 					Where("id = ?", dispute.ID).
-					UpdateColumns(map[string]interface{}{
+					Updates(map[string]interface{}{
 						"status":          model.DisputeStatusRefund,
 						"handler_user_id": merchantUser.ID,
 					}).Error; err != nil {
@@ -346,7 +347,7 @@ func RefundReview(c *gin.Context) {
 
 				if err := tx.Model(&model.Dispute{}).
 					Where("id = ?", dispute.ID).
-					UpdateColumns(updateData).Error; err != nil {
+					Updates(updateData).Error; err != nil {
 					return err
 				}
 

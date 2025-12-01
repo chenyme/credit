@@ -346,6 +346,7 @@ func PayMerchantOrder(c *gin.Context) {
 				UpdateColumns(map[string]interface{}{
 					"available_balance": gorm.Expr("available_balance - ?", order.Amount),
 					"total_payment":     gorm.Expr("total_payment + ?", order.Amount),
+					"pay_score":         gorm.Expr("pay_score + ?", order.Amount.Round(0).IntPart()),
 				})
 			if result.Error != nil {
 				return result.Error
