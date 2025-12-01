@@ -1,4 +1,5 @@
 import { BaseService } from '../core/base.service';
+import type { InternalAxiosRequestConfig } from 'axios';
 import type {
   MerchantAPIKey,
   CreateAPIKeyRequest,
@@ -168,7 +169,7 @@ export class MerchantService extends BaseService {
       headers: {
         Authorization: `Basic ${encodedAuth}`,
       },
-    });
+    } as InternalAxiosRequestConfig);
   }
 
   /**
