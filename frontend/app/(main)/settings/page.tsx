@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { UserRound, Bell, Shield, Palette } from "lucide-react"
 
 
