@@ -21,3 +21,40 @@ export function formatDateTime(dateStr: string | Date) {
     return String(dateStr)
   }
 }
+
+/**
+ * 格式化日期为本地时间字符串（带时区）
+ * @param date 要格式化的日期
+ * @returns 格式化后的日期字符串，如 "2024-01-15T00:00:00+08:00"
+ */
+export function formatLocalDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${ year }-${ month }-${ day }T${ hours }:${ minutes }:${ seconds }+08:00`
+}
+
+/**
+ * 生成交易缓存的唯一键
+ * @param params 交易查询参数
+ * @returns 缓存键字符串
+ */
+export function generateTransactionCacheKey(params: {
+  type?: string
+  status?: string
+  client_id?: string
+  page?: number
+  page_size?: number
+  startTime?: string
+  endTime?: string
+}): string {
+  const typeKey = params.type || 'all'
+  const statusKey = params.status || 'all'
+  const clientIdKey = params.client_id || 'all'
+  const startTimeKey = params.startTime || 'no-start'
+  const endTimeKey = params.endTime || 'no-end'
+  return `${ typeKey }_${ statusKey }_${ clientIdKey }_${ params.page }_${ params.page_size }_${ startTimeKey }_${ endTimeKey }`
+}

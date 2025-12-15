@@ -482,25 +482,31 @@ export const searchData: SearchItem[] = [
 ]
 
 /**
+ * 预计算的搜索索引
+ * 在模块加载时一次性处理,避免每次搜索重复创建字符串
+ */
+const searchIndex: Map<string, string> = new Map(
+  searchData.map((item) => [
+    item.id,
+    [item.title, item.description, ...item.keywords].join(' ').toLowerCase()
+  ])
+)
+
+/**
  * 搜索功能
  * @param query 搜索关键词
  * @returns 匹配的搜索结果
  */
 export function searchItems(query: string): SearchItem[] {
-  if (!query.trim()) {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
     return searchData
   }
 
-  const lowerQuery = query.toLowerCase()
+  const lowerQuery = trimmedQuery.toLowerCase()
 
   return searchData.filter((item) => {
-    // 在标题、描述和关键词中搜索
-    const searchText = [
-      item.title,
-      item.description,
-      ...item.keywords,
-    ].join(' ').toLowerCase()
-
-    return searchText.includes(lowerQuery)
+    const searchText = searchIndex.get(item.id)
+    return searchText ? searchText.includes(lowerQuery) : false
   })
 }

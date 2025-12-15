@@ -56,7 +56,7 @@ export const useDisputeData = ({ fetchFn }: UseDisputeDataProps) => {
     fetchData()
   }, [fetchData])
 
-  const handleRefresh = async () => {
+  const handleRefresh = React.useCallback(async () => {
     setLoading(true)
     try {
       const result = await fetchFnRef.current({
@@ -75,7 +75,7 @@ export const useDisputeData = ({ fetchFn }: UseDisputeDataProps) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   return { disputes, loading, handleRefresh, refetchData: fetchData }
 }

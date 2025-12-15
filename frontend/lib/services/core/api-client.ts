@@ -40,13 +40,13 @@ const pendingRequests = new Map<string, Promise<AxiosResponse<ApiResponse>>>();
  * 包含方法、URL 和请求数据的哈希，确保不同参数的请求不会被误取消
  */
 function getRequestKey(config: { method?: string; url?: string; data?: unknown }): string {
-  const baseKey = `${config.method?.toUpperCase()}_${config.url}`;
+  const baseKey = `${ config.method?.toUpperCase() }_${ config.url }`;
 
   /* 序列化加入键中 */
   if (config.data) {
     try {
       const dataHash = JSON.stringify(config.data);
-      return `${baseKey}_${dataHash}`;
+      return `${ baseKey }_${ dataHash }`;
     } catch {
       // 失败使用基础键
       return baseKey;
@@ -197,7 +197,7 @@ apiClient.interceptors.response.use(
  * @param url - 请求 URL
  */
 export function cancelRequest(method: string, url: string): void {
-  const requestKey = `${method.toUpperCase()}_${url}`;
+  const requestKey = `${ method.toUpperCase() }_${ url }`;
   const source = cancelTokens.get(requestKey);
   if (source) {
     source.cancel('请求已被手动取消');
@@ -216,109 +216,61 @@ export function cancelAllRequests(): void {
 }
 
 /**
+ * 创建带有请求去重功能的请求方法
+ * @param method HTTP 方法名
+ * @param hasBody 是否包含请求体
+ */
+function createRequestMethod(
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+  hasBody: boolean
+) {
+  if (hasBody) {
+    return <T = ApiResponse>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) => {
+      const requestKey = getRequestKey({ method: method.toUpperCase(), url, data });
+
+      if (pendingRequests.has(requestKey)) {
+        return pendingRequests.get(requestKey) as Promise<AxiosResponse<T>>;
+      }
+
+      const promise = apiClient[method]<T>(url, data, config);
+      pendingRequests.set(requestKey, promise as Promise<AxiosResponse<ApiResponse>>);
+
+      promise.finally(() => {
+        pendingRequests.delete(requestKey);
+      });
+
+      return promise;
+    };
+  }
+
+  return <T = ApiResponse>(url: string, config?: InternalAxiosRequestConfig) => {
+    const requestKey = getRequestKey({ method: method.toUpperCase(), url, data: config?.params });
+
+    if (pendingRequests.has(requestKey)) {
+      return pendingRequests.get(requestKey) as Promise<AxiosResponse<T>>;
+    }
+
+    const promise = apiClient[method]<T>(url, config);
+    pendingRequests.set(requestKey, promise as Promise<AxiosResponse<ApiResponse>>);
+
+    promise.finally(() => {
+      pendingRequests.delete(requestKey);
+    });
+
+    return promise;
+  };
+}
+
+/**
  * 包装的 API 客户端
  * 在原有 axios 实例基础上添加请求缓存功能
  */
 const wrappedApiClient = {
-  get: <T = ApiResponse>(url: string, config?: InternalAxiosRequestConfig) => {
-    const requestKey = getRequestKey({ method: 'GET', url, data: config?.params });
-
-    /* 检查是否有相同的请求正在进行 */
-    if (pendingRequests.has(requestKey)) {
-      return pendingRequests.get(requestKey) as Promise<AxiosResponse<T>>;
-    }
-
-    /* 发起新请求并缓存 Promise */
-    const promise = apiClient.get<T>(url, config);
-    pendingRequests.set(requestKey, promise as Promise<AxiosResponse<ApiResponse>>);
-
-    /* 请求完成后清除缓存 */
-    promise.finally(() => {
-      pendingRequests.delete(requestKey);
-    });
-
-    return promise;
-  },
-
-  post: <T = ApiResponse>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) => {
-    const requestKey = getRequestKey({ method: 'POST', url, data });
-
-    /* 检查是否有相同的请求正在进行 */
-    if (pendingRequests.has(requestKey)) {
-      return pendingRequests.get(requestKey) as Promise<AxiosResponse<T>>;
-    }
-
-    /* 发起新请求并缓存 Promise */
-    const promise = apiClient.post<T>(url, data, config);
-    pendingRequests.set(requestKey, promise as Promise<AxiosResponse<ApiResponse>>);
-
-    /* 请求完成后清除缓存 */
-    promise.finally(() => {
-      pendingRequests.delete(requestKey);
-    });
-
-    return promise;
-  },
-
-  put: <T = ApiResponse>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) => {
-    const requestKey = getRequestKey({ method: 'PUT', url, data });
-
-    /* 检查是否有相同的请求正在进行 */
-    if (pendingRequests.has(requestKey)) {
-      return pendingRequests.get(requestKey) as Promise<AxiosResponse<T>>;
-    }
-
-    /* 发起新请求并缓存 Promise */
-    const promise = apiClient.put<T>(url, data, config);
-    pendingRequests.set(requestKey, promise as Promise<AxiosResponse<ApiResponse>>);
-
-    /* 请求完成后清除缓存 */
-    promise.finally(() => {
-      pendingRequests.delete(requestKey);
-    });
-
-    return promise;
-  },
-
-  patch: <T = ApiResponse>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) => {
-    const requestKey = getRequestKey({ method: 'PATCH', url, data });
-
-    /* 检查是否有相同的请求正在进行 */
-    if (pendingRequests.has(requestKey)) {
-      return pendingRequests.get(requestKey) as Promise<AxiosResponse<T>>;
-    }
-
-    /* 发起新请求并缓存 Promise */
-    const promise = apiClient.patch<T>(url, data, config);
-    pendingRequests.set(requestKey, promise as Promise<AxiosResponse<ApiResponse>>);
-
-    /* 请求完成后清除缓存 */
-    promise.finally(() => {
-      pendingRequests.delete(requestKey);
-    });
-
-    return promise;
-  },
-
-  delete: <T = ApiResponse>(url: string, config?: InternalAxiosRequestConfig) => {
-    const requestKey = getRequestKey({ method: 'DELETE', url, data: config?.params });
-
-    /* 检查是否有相同的请求正在进行 */
-    if (pendingRequests.has(requestKey)) {
-      return pendingRequests.get(requestKey) as Promise<AxiosResponse<T>>;
-    }
-
-    /* 发起新请求并缓存 Promise */
-    const promise = apiClient.delete<T>(url, config);
-    pendingRequests.set(requestKey, promise as Promise<AxiosResponse<ApiResponse>>);
-
-    /* 请求完成后清除缓存 */
-    promise.finally(() => {
-      pendingRequests.delete(requestKey);
-    });
-
-    return promise;
-  },
+  get: createRequestMethod('get', false) as <T = ApiResponse>(url: string, config?: InternalAxiosRequestConfig) => Promise<AxiosResponse<T>>,
+  post: createRequestMethod('post', true) as <T = ApiResponse>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) => Promise<AxiosResponse<T>>,
+  put: createRequestMethod('put', true) as <T = ApiResponse>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) => Promise<AxiosResponse<T>>,
+  patch: createRequestMethod('patch', true) as <T = ApiResponse>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) => Promise<AxiosResponse<T>>,
+  delete: createRequestMethod('delete', false) as <T = ApiResponse>(url: string, config?: InternalAxiosRequestConfig) => Promise<AxiosResponse<T>>,
 };
 
 export default wrappedApiClient;

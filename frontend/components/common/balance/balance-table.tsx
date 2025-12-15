@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TransactionTableList } from "@/components/common/general/table-data"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
 import type { OrderType } from "@/lib/services"
+import { formatLocalDate } from "@/lib/utils"
 
 /** 标签触发器样式 */
 const TAB_TRIGGER_STYLES =
@@ -40,6 +41,22 @@ const TABS = [
 ] as const
 
 /**
+ * 计算最近30天的时间范围
+ * 每次调用时重新计算，避免缓存过期时间
+ */
+function getTimeRange() {
+  const now = new Date()
+  now.setHours(23, 59, 59, 999)
+  const start = new Date(now)
+  start.setDate(start.getDate() - 30)
+  start.setHours(0, 0, 0, 0)
+  return {
+    startTime: formatLocalDate(start),
+    endTime: formatLocalDate(now)
+  }
+}
+
+/**
  * 余额活动表格组件
  * 
  * 显示不同类型的交易记录,支持多标签切换和分页加载
@@ -47,13 +64,8 @@ const TABS = [
 export function BalanceTable() {
   const [activeTab, setActiveTab] = React.useState<OrderType | "all">("all")
 
-  // 计算最近30天的时间范围
-  const timeRange = React.useMemo(() => {
-    const now = new Date()
-    const endTime = now.toISOString()
-    const startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
-    return { startTime, endTime }
-  }, [])
+  // 每次渲染时获取新的时间范围，确保不会过期
+  const timeRange = getTimeRange()
 
   const handleTabChange = React.useCallback((value: string) => {
     setActiveTab(value as OrderType | "all")

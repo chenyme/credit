@@ -5,6 +5,7 @@ import { createContext, useContext, useCallback, useState, useRef, useEffect } f
 
 import services from "@/lib/services"
 import type { Order, TransactionQueryParams } from "@/lib/services"
+import { generateTransactionCacheKey } from "@/lib/utils"
 
 
 /* 交易上下文状态接口 */
@@ -96,12 +97,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     const requestId = ++latestRequestIdRef.current
 
     /* 生成缓存key */
-    const typeKey = queryParams.type || 'all'
-    const statusKey = queryParams.status || 'all'
-    const clientIdKey = queryParams.client_id || 'all'
-    const startTimeKey = queryParams.startTime || 'no-start'
-    const endTimeKey = queryParams.endTime || 'no-end'
-    const cacheKey = `${ typeKey }_${ statusKey }_${ clientIdKey }_${ queryParams.page }_${ queryParams.page_size }_${ startTimeKey }_${ endTimeKey }`
+    const cacheKey = generateTransactionCacheKey(queryParams)
 
     const cached = cacheRef.current[cacheKey]
     const now = Date.now()
@@ -131,10 +127,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     }
 
     try {
-      const [result] = await Promise.all([
-        services.transaction.getTransactions(queryParams),
-        new Promise(resolve => setTimeout(resolve, 300))
-      ])
+      const result = await services.transaction.getTransactions(queryParams)
 
       if (requestId !== latestRequestIdRef.current) {
         return
@@ -187,12 +180,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
 
   /* 刷新当前页 */
   const refresh = useCallback(async () => {
-    const typeKey = lastParams.type || 'all'
-    const statusKey = lastParams.status || 'all'
-    const clientIdKey = lastParams.client_id || 'all'
-    const startTimeKey = lastParams.startTime || 'no-start'
-    const endTimeKey = lastParams.endTime || 'no-end'
-    const cacheKey = `${ typeKey }_${ statusKey }_${ clientIdKey }_1_${ pageSize }_${ startTimeKey }_${ endTimeKey }`
+    const cacheKey = generateTransactionCacheKey({ ...lastParams, page: 1, page_size: pageSize })
     delete cacheRef.current[cacheKey]
 
     await fetchTransactions({

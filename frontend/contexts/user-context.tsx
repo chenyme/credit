@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
 
 import services from '@/lib/services'
 import { User, TrustLevel, PayLevel } from '@/lib/services/auth/types'
@@ -66,17 +66,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const isMountedRef = useRef(true)
 
   /* 获取信任等级标签 */
-  const getTrustLevelLabel = (trustLevel: TrustLevel): string => {
+  const getTrustLevelLabel = useCallback((trustLevel: TrustLevel): string => {
     return TRUST_LEVEL_LABELS[trustLevel] || '未知'
-  }
+  }, [])
 
   /* 获取支付等级标签 */
-  const getPayLevelLabel = (payLevel: PayLevel): string => {
+  const getPayLevelLabel = useCallback((payLevel: PayLevel): string => {
     return PAY_LEVEL_LABELS[payLevel] || '未知'
-  }
+  }, [])
 
   /* 获取用户信息 */
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }))
       const user = await services.auth.getUserInfo()
@@ -93,21 +93,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
         error: error instanceof Error ? error.message : '获取用户信息失败',
       })
     }
-  }
+  }, [])
 
   /* 重新获取用户信息 */
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     await fetchUser()
-  }
+  }, [fetchUser])
 
   /* 更新支付密码 */
-  const updatePayKey = async (payKey: string) => {
+  const updatePayKey = useCallback(async (payKey: string) => {
     await services.user.updatePayKey(payKey)
     await fetchUser()
-  }
+  }, [fetchUser])
 
   /* 用户登出 */
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await services.auth.logout()
 
@@ -123,7 +123,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         error: error instanceof Error ? error.message : '登出失败',
       }))
     }
-  }
+  }, [])
 
   /* 组件挂载时获取用户信息 */
   useEffect(() => {
@@ -133,7 +133,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return () => {
       isMountedRef.current = false
     }
-  }, [])
+  }, [fetchUser])
 
   return (
     <UserContext.Provider

@@ -51,10 +51,14 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
   /* 使用 ref 来标记是否已经加载过数据（全局级别） */
   const hasLoadedRef = useRef(false)
   const isMountedRef = useRef(true)
+  const apiKeysRef = useRef(state.apiKeys)
+
+  /* 同步更新 ref */
+  apiKeysRef.current = state.apiKeys
 
   /* 获取 API Keys */
   const loadAPIKeys = useCallback(async () => {
-    if (hasLoadedRef.current && state.apiKeys.length > 0) {
+    if (hasLoadedRef.current && apiKeysRef.current.length > 0) {
       return
     }
 
@@ -93,7 +97,7 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
         description: errorMessage
       })
     }
-  }, [state.apiKeys.length])
+  }, [])
 
   /* 创建 API Key */
   const createAPIKey = useCallback(async (data: {

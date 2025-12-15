@@ -3,6 +3,7 @@ import { TransactionTableList } from "@/components/common/general/table-data"
 import { TableFilter } from "@/components/common/general/table-filter"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
 import type { OrderStatus, OrderType, TransactionQueryParams } from "@/lib/services"
+import { formatLocalDate } from "@/lib/utils"
 
 /**
  * 交易表格组件
@@ -18,17 +19,6 @@ export function TradeTable({ type }: { type?: OrderType }) {
     start.setDate(start.getDate() - 29)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
-
-    // 格式化为本地时间字符串
-    const formatLocalDate = (date: Date) => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const seconds = String(date.getSeconds()).padStart(2, '0')
-      return `${ year }-${ month }-${ day }T${ hours }:${ minutes }:${ seconds }+08:00`
-    }
 
     return {
       startTime: formatLocalDate(start),
@@ -90,17 +80,6 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     setDateRange({ from, to: tomorrow })
     setSelectedQuickSelection("最近 1 个月")
 
-    // 格式化日期为本地时间字符串
-    const formatLocalDate = (date: Date) => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const seconds = String(date.getSeconds()).padStart(2, '0')
-      return `${ year }-${ month }-${ day }T${ hours }:${ minutes }:${ seconds }+08:00`
-    }
-
     /* 重新获取数据 */
     fetchTransactions({
       page: 1,
@@ -113,16 +92,6 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
 
   /* 当筛选条件改变时，重新加载数据 */
   React.useEffect(() => {
-    const formatLocalDate = (date: Date) => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const seconds = String(date.getSeconds()).padStart(2, '0')
-      return `${ year }-${ month }-${ day }T${ hours }:${ minutes }:${ seconds }+08:00`
-    }
-
     const params: TransactionQueryParams = {
       page: 1,
       page_size: 20,
