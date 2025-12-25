@@ -103,7 +103,6 @@ log:
 
 # Scheduler
 scheduler:
-  user_gamification_score_dispatch_interval_seconds: 3
   update_user_gamification_scores_task_cron: "0 2 * * *"
   dispute_auto_refund_dispatch_interval_seconds: 3
   auto_refund_expired_disputes_task_cron: "0 0 * * *"
@@ -120,6 +119,10 @@ worker:
       priority: 5
     - name: default
       priority: 3
+  # 积分更新速率限制：rate 次/period 秒
+  gamification_score_rate_limit:
+    rate: 1     # 允许的请求次数
+    period: 3   # 时间周期（秒）
 
 # linuxDo
 linuxDo:
