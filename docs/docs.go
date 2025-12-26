@@ -1417,6 +1417,12 @@ const docTemplate = `{
                 "endTime": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
+                "order_name": {
+                    "type": "string"
+                },
                 "page": {
                     "type": "integer",
                     "minimum": 1
@@ -1425,6 +1431,12 @@ const docTemplate = `{
                     "type": "integer",
                     "maximum": 100,
                     "minimum": 1
+                },
+                "payee_username": {
+                    "type": "string"
+                },
+                "payer_username": {
+                    "type": "string"
                 },
                 "startTime": {
                     "type": "string"

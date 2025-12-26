@@ -145,6 +145,10 @@ definitions:
         type: string
       endTime:
         type: string
+      id:
+        type: integer
+      order_name:
+        type: string
       page:
         minimum: 1
         type: integer
@@ -152,6 +156,10 @@ definitions:
         maximum: 100
         minimum: 1
         type: integer
+      payee_username:
+        type: string
+      payer_username:
+        type: string
       startTime:
         type: string
       status:

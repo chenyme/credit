@@ -28,13 +28,17 @@ import (
 )
 
 type TransactionListRequest struct {
-	Page      int        `json:"page" form:"page" binding:"min=1"`
-	PageSize  int        `json:"page_size" form:"page_size" binding:"min=1,max=100"`
-	Type      string     `json:"type" form:"type" binding:"omitempty,oneof=receive payment transfer community online"`
-	Status    string     `json:"status" form:"status" binding:"omitempty,oneof=success pending failed expired disputing refund refused"`
-	ClientID  string     `json:"client_id" form:"client_id" binding:"omitempty"`
-	StartTime *time.Time `json:"startTime" form:"startTime" binding:"omitempty"`
-	EndTime   *time.Time `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
+	Page          int        `json:"page" form:"page" binding:"min=1"`
+	PageSize      int        `json:"page_size" form:"page_size" binding:"min=1,max=100"`
+	Type          string     `json:"type" form:"type" binding:"omitempty,oneof=receive payment transfer community online"`
+	Status        string     `json:"status" form:"status" binding:"omitempty,oneof=success pending failed expired disputing refund refused"`
+	ClientID      string     `json:"client_id" form:"client_id" binding:"omitempty"`
+	StartTime     *time.Time `json:"startTime" form:"startTime" binding:"omitempty"`
+	EndTime       *time.Time `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
+	ID            *uint64    `json:"id" form:"id" binding:"omitempty"`
+	OrderName     string     `json:"order_name" form:"order_name" binding:"omitempty"`
+	PayerUsername string     `json:"payer_username" form:"payer_username" binding:"omitempty"`
+	PayeeUsername string     `json:"payee_username" form:"payee_username" binding:"omitempty"`
 }
 
 type TransactionListResponse struct {
@@ -120,6 +124,18 @@ func ListTransactions(c *gin.Context) {
 
 	if req.ClientID != "" && !clientIDHandled {
 		baseQuery = baseQuery.Where("orders.client_id = ?", req.ClientID)
+	}
+	if req.ID != nil {
+		baseQuery = baseQuery.Where("orders.id = ?", req.ID)
+	}
+	if req.OrderName != "" {
+		baseQuery = baseQuery.Where("orders.order_name LIKE ?", req.OrderName+"%")
+	}
+	if req.PayerUsername != "" {
+		baseQuery = baseQuery.Where("payer_user.username LIKE ?", req.PayerUsername+"%")
+	}
+	if req.PayeeUsername != "" {
+		baseQuery = baseQuery.Where("payee_user.username LIKE ?", req.PayeeUsername+"%")
 	}
 	if req.StartTime != nil {
 		baseQuery = baseQuery.Where("orders.created_at >= ?", req.StartTime)
