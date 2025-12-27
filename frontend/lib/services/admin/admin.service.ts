@@ -6,7 +6,15 @@ import type {
   UserPayConfig,
   CreateUserPayConfigRequest,
   UpdateUserPayConfigRequest,
+  TaskMeta,
+  TaskTypeResponse,
+  DispatchTaskRequest,
+  ListUsersRequest,
+  ListUsersResponse,
+  UpdateUserStatusRequest,
 } from './types';
+
+export type { AdminUser } from './types';
 
 /**
  * 管理员服务
@@ -74,7 +82,7 @@ export class AdminService extends BaseService {
    * ```
    */
   static async getSystemConfig(key: string): Promise<SystemConfig> {
-    return this.get<SystemConfig>(`/system-configs/${key}`);
+    return this.get<SystemConfig>(`/system-configs/${ key }`);
   }
 
   /**
@@ -99,7 +107,7 @@ export class AdminService extends BaseService {
     key: string,
     request: UpdateSystemConfigRequest,
   ): Promise<void> {
-    return this.put<void>(`/system-configs/${key}`, request);
+    return this.put<void>(`/system-configs/${ key }`, request);
   }
 
   /**
@@ -116,7 +124,7 @@ export class AdminService extends BaseService {
    * ```
    */
   static async deleteSystemConfig(key: string): Promise<void> {
-    return this.delete<void>(`/system-configs/${key}`);
+    return this.delete<void>(`/system-configs/${ key }`);
   }
 
   // ==================== 用户积分配置管理 ====================
@@ -183,7 +191,7 @@ export class AdminService extends BaseService {
    * ```
    */
   static async getUserPayConfig(id: number): Promise<UserPayConfig> {
-    return this.get<UserPayConfig>(`/user-pay-configs/${id}`);
+    return this.get<UserPayConfig>(`/user-pay-configs/${ id }`);
   }
 
   /**
@@ -215,7 +223,7 @@ export class AdminService extends BaseService {
     id: number,
     request: UpdateUserPayConfigRequest,
   ): Promise<void> {
-    return this.put<void>(`/user-pay-configs/${id}`, request);
+    return this.put<void>(`/user-pay-configs/${ id }`, request);
   }
 
   /**
@@ -232,7 +240,132 @@ export class AdminService extends BaseService {
    * ```
    */
   static async deleteUserPayConfig(id: number): Promise<void> {
-    return this.delete<void>(`/user-pay-configs/${id}`);
+    return this.delete<void>(`/user-pay-configs/${ id }`);
+  }
+
+  // ==================== 任务管理 ====================
+
+  /**
+   * 获取支持的任务类型列表
+   * @returns 任务类型列表
+   * @throws {UnauthorizedError} 当未登录时
+   * @throws {ForbiddenError} 当无管理员权限时
+   * 
+   * @example
+   * ```typescript
+   * const taskTypes = await AdminService.getTaskTypes();
+   * console.log('可用任务类型:', taskTypes);
+   * ```
+   */
+  static async getTaskTypes(): Promise<TaskMeta[]> {
+    const response = await this.get<TaskTypeResponse[]>('/tasks/types');
+    // Adapt backend PascalCase to frontend snake_case
+    return response.map(item => ({
+      type: item.Type || item.type || '',
+      asynq_task: item.AsynqTask || item.asynq_task || '',
+      name: item.Name || item.name || '',
+      description: item.Description || item.description || '',
+      supports_time: item.SupportsTime ?? item.supports_time ?? false,
+      max_retry: item.MaxRetry ?? item.max_retry ?? 0,
+      queue: item.Queue || item.queue || '',
+    }));
+  }
+
+  /**
+   * 下发任务
+   * @param request - 下发任务请求参数
+   * @returns void
+   * @throws {UnauthorizedError} 当未登录时
+   * @throws {ForbiddenError} 当无管理员权限时
+   * @throws {ValidationError} 当参数验证失败时
+   * 
+   * @example
+   * ```typescript
+   * // 下发订单同步任务（带时间范围）
+   * await AdminService.dispatchTask({
+   *   task_type: 'order_sync',
+   *   start_time: '2025-12-01T00:00:00Z',
+   *   end_time: '2025-12-27T23:59:59Z'
+   * });
+   * 
+   * // 下发用户积分更新任务
+   * await AdminService.dispatchTask({
+   *   task_type: 'user_gamification',
+   *   user_id: 123
+   * });
+   * 
+   * // 下发争议自动退款任务
+   * await AdminService.dispatchTask({
+   *   task_type: 'dispute_auto_refund'
+   * });
+   * ```
+   * 
+   * @remarks
+   * - 不同任务类型需要不同的参数
+   * - order_sync 支持 start_time 和 end_time 参数
+   * - user_gamification 需要 user_id 参数
+   * - 其他任务无需额外参数
+   */
+  static async dispatchTask(request: DispatchTaskRequest): Promise<void> {
+    return this.post<void>('/tasks/dispatch', request);
+  }
+
+  // ==================== 用户管理 ====================
+
+  /**
+   * 获取用户列表
+   * @param request - 查询参数
+   * @returns 用户列表及总数
+   * @throws {UnauthorizedError} 当未登录时
+   * @throws {ForbiddenError} 当无管理员权限时
+   * @throws {ValidationError} 当参数验证失败时
+   * 
+   * @example
+   * ```typescript
+   * const result = await AdminService.listUsers({
+   *   page: 1,
+   *   page_size: 20,
+   *   username: 'test'
+   * });
+   * console.log('用户总数:', result.total);
+   * console.log('用户列表:', result.users);
+   * ```
+   * 
+   * @remarks
+   * - page 从 1 开始
+   * - page_size 范围 1-100
+   * - username 为可选的用户名前缀过滤
+   */
+  static async listUsers(request: ListUsersRequest): Promise<ListUsersResponse> {
+    return this.get<ListUsersResponse>('/users', request as unknown as Record<string, unknown>);
+  }
+
+  /**
+   * 更新用户状态
+   * @param id - 用户 ID
+   * @param request - 更新状态请求参数
+   * @returns void
+   * @throws {UnauthorizedError} 当未登录时
+   * @throws {ForbiddenError} 当无管理员权限或禁用管理员用户时
+   * @throws {NotFoundError} 当用户不存在时
+   * 
+   * @example
+   * ```typescript
+   * // 禁用用户
+   * await AdminService.updateUserStatus(123, { is_active: false });
+   * 
+   * // 启用用户
+   * await AdminService.updateUserStatus(123, { is_active: true });
+   * ```
+   * 
+   * @remarks
+   * - 不能禁用管理员用户
+   */
+  static async updateUserStatus(
+    id: number,
+    request: UpdateUserStatusRequest
+  ): Promise<void> {
+    return this.put<void>(`/users/${ id }/status`, request);
   }
 }
 

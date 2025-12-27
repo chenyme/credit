@@ -407,13 +407,13 @@ export function ProfileMain() {
 
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  社区积分
+                  积分基准值
                   <Popover>
                     <PopoverTrigger>
                       <Info className="h-3 w-3 cursor-help" />
                     </PopoverTrigger>
                     <PopoverContent side="top" className="w-auto max-w-[280px] p-3">
-                      <p className="text-xs">上一次从社区同步的积分，积分会在每日划转时通过系统定时任务自动同步更新</p>
+                      <p className="text-xs">上一次从社区同步的积分基准值</p>
                     </PopoverContent>
                   </Popover>
                 </div>

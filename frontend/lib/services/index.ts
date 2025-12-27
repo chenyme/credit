@@ -156,6 +156,12 @@ export type {
   UserPayConfig,
   CreateUserPayConfigRequest,
   UpdateUserPayConfigRequest,
+  TaskMeta,
+  DispatchTaskRequest,
+  AdminUser,
+  ListUsersRequest,
+  ListUsersResponse,
+  UpdateUserStatusRequest,
 } from './admin';
 
 // 用户服务

@@ -56,6 +56,7 @@ import {
   FileQuestionMark,
   ShieldCheck,
   Globe,
+  Layers,
 } from "lucide-react"
 
 import { useUser } from "@/contexts/user-context"
@@ -71,7 +72,9 @@ const data = {
   ],
   admin: [
     { title: "系统配置", url: "/admin/system", icon: ShieldCheck },
-    { title: "积分配置", url: "/admin/user_pay", icon: Settings },
+    { title: "积分配置", url: "/admin/credit", icon: Settings },
+    { title: "用户管理", url: "/admin/users", icon: UserRound },
+    { title: "任务管理", url: "/admin/tasks", icon: Layers },
   ],
   document: [
     { title: "接口文档", url: "/docs/api", icon: CreditCard },

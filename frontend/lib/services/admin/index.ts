@@ -35,5 +35,11 @@ export type {
   UserPayConfig,
   CreateUserPayConfigRequest,
   UpdateUserPayConfigRequest,
+  TaskMeta,
+  DispatchTaskRequest,
+  AdminUser,
+  ListUsersRequest,
+  ListUsersResponse,
+  UpdateUserStatusRequest,
 } from './types';
 

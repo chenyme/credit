@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { typeConfig, statusConfig } from "@/components/common/general/table-filter"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorInline } from "@/components/layout/error"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -57,7 +57,7 @@ export const TransactionDataTable = React.memo(function TransactionDataTable({
         ref={scrollAreaRef}
         className="w-full h-[600px] whitespace-nowrap"
       >
-        <table className="w-full caption-bottom text-sm min-w-full">
+        <Table className="w-full caption-bottom text-sm min-w-full">
           <TableHeader className="sticky top-0 z-20 bg-background">
             <TableRow className="border-b border-dashed hover:bg-transparent">
               <TableHead className="whitespace-nowrap w-[120px]">名称</TableHead>
@@ -98,7 +98,7 @@ export const TransactionDataTable = React.memo(function TransactionDataTable({
               </tr>
             )}
           </TableBody>
-        </table>
+        </Table>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>

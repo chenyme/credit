@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { SystemConfigs } from "@/components/common/admin/system-configs"
+import { SystemConfigs } from "@/components/common/admin/system"
 import { ErrorPage } from "@/components/layout/error"
 import { LoadingPage } from "@/components/layout/loading"
 
