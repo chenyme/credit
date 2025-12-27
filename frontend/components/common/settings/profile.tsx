@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Info } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -408,16 +408,14 @@ export function ProfileMain() {
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                   社区积分
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-[280px] text-center">
-                        <p className="text-xs">上一次从社区同步的积分，积分会在每日划转时通过系统定时任务自动同步更新</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Popover>
+                    <PopoverTrigger>
+                      <Info className="h-3 w-3 cursor-help" />
+                    </PopoverTrigger>
+                    <PopoverContent side="top" className="w-auto max-w-[280px] p-3">
+                      <p className="text-xs">上一次从社区同步的积分，积分会在每日划转时通过系统定时任务自动同步更新</p>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="text-sm font-medium tabular-nums">
                   {parseFloat(user.community_balance).toLocaleString()}

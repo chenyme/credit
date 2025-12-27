@@ -3,7 +3,7 @@ import { Area, AreaChart, XAxis } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { CountingNumber } from '@/components/animate-ui/primitives/texts/counting-number'
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Info } from "lucide-react"
 
 import { useUser } from "@/contexts/user-context"
@@ -190,16 +190,14 @@ export function DataPanel() {
         <div className="flex-1 md:pt-4 pl-0 md:pl-0">
           <div className="text-sm text-muted-foreground font-medium flex items-center gap-1 whitespace-nowrap">
             今日剩余额度
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="size-3.5" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>每日积分消耗额度限制，每日 0 点自动重置</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Popover>
+              <PopoverTrigger>
+                <Info className="size-3.5 cursor-pointer" />
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-auto max-w-[280px] p-3">
+                <p className="text-xs">每日积分消耗额度限制，每日 0 点自动重置</p>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="text-xl font-semibold pt-2">
             {userLoading ? '-' : remainQuota < 0 ? "无限制" : <CountingNumber number={remainQuota} decimalPlaces={2} />}
