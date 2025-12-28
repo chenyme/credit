@@ -64,7 +64,7 @@ var DispatchableTasks = []TaskMeta{
 		Type:         TaskTypeUserGamification,
 		AsynqTask:    UpdateSingleUserGamificationScoreTask,
 		Name:         "用户积分更新",
-		Description:  "更新指定用户的游戏化积分",
+		Description:  "更新用户的点数积分",
 		SupportsTime: false,
 		MaxRetry:     5,
 		Queue:        QueueWhitelistOnly,

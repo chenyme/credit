@@ -91,15 +91,15 @@ func DispatchTask(c *gin.Context) {
 
 	case task.TaskTypeUserGamification:
 		if req.UserID == nil || *req.UserID == 0 {
-			c.JSON(http.StatusBadRequest, util.Err(UserIDRequired))
-			return
+			taskInfo = asynq.NewTask(task.UpdateUserGamificationScoresTask, nil)
+			taskID = fmt.Sprintf("manual_%s", req.TaskType)
+		} else {
+			payload, _ := json.Marshal(map[string]interface{}{
+				"user_id": *req.UserID,
+			})
+			taskInfo = asynq.NewTask(meta.AsynqTask, payload)
+			taskID = fmt.Sprintf("manual_%s_user_%d", req.TaskType, *req.UserID)
 		}
-		payload, _ := json.Marshal(map[string]interface{}{
-			"user_id": *req.UserID,
-		})
-		taskInfo = asynq.NewTask(meta.AsynqTask, payload)
-		taskID = fmt.Sprintf("manual_%s_user_%d", req.TaskType, *req.UserID)
-
 	default:
 		taskInfo = asynq.NewTask(meta.AsynqTask, nil)
 		taskID = fmt.Sprintf("manual_%s", req.TaskType)
