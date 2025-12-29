@@ -26,8 +26,12 @@ export interface Order {
   payee_user_id: string;
   /** 付款方账户 */
   payer_username: string;
+  /** 付款方头像 */
+  payer_avatar_url?: string;
   /** 收款方账户 */
   payee_username: string;
+  /** 收款方头像 */
+  payee_avatar_url?: string;
   /** 交易金额（decimal字符串） */
   amount: string;
   /** 订单状态 */

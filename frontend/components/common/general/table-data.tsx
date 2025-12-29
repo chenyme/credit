@@ -168,14 +168,14 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
               <TooltipTrigger asChild>
                 <div className="flex items-center cursor-pointer gap-1 justify-center">
                   <Avatar className="h-4 w-4">
-                    <AvatarImage src={undefined} />
+                    <AvatarImage src={order.payer_avatar_url || undefined} />
                     <AvatarFallback className="text-[9px] bg-primary text-primary-foreground">
                       {order.payer_username.substring(0, 1).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-xs font-bold">⭢</div>
                   <Avatar className="h-4 w-4">
-                    <AvatarImage src={undefined} />
+                    <AvatarImage src={order.payee_avatar_url || undefined} />
                     <AvatarFallback className="text-[9px] bg-primary text-primary-foreground">
                       {order.payee_username.substring(0, 1).toUpperCase()}
                     </AvatarFallback>
