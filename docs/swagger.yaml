@@ -195,6 +195,7 @@ definitions:
         - community
         - online
         - test
+        - distribute
         type: string
     type: object
   payment.CreateOrderRequest:
@@ -215,25 +216,24 @@ definitions:
     - amount
     - order_name
     type: object
-  payment.MerchantPayoutRequest:
+  payment.MerchantDistributeRequest:
     properties:
       amount:
         type: number
       out_trade_no:
         maxLength: 64
         type: string
-      recipient_id:
-        example: "0"
-        type: string
-      recipient_username:
-        type: string
       remark:
         maxLength: 100
         type: string
+      user_id:
+        type: integer
+      username:
+        type: string
     required:
     - amount
-    - recipient_id
-    - recipient_username
+    - user_id
+    - username
     type: object
   payment.PayOrderRequest:
     properties:
@@ -386,6 +386,8 @@ definitions:
     properties:
       daily_limit:
         type: integer
+      distribute_rate:
+        type: number
       fee_rate:
         type: number
       level:
@@ -398,6 +400,7 @@ definitions:
       score_rate:
         type: number
     required:
+    - distribute_rate
     - fee_rate
     - score_rate
     type: object
@@ -405,6 +408,8 @@ definitions:
     properties:
       daily_limit:
         type: integer
+      distribute_rate:
+        type: number
       fee_rate:
         type: number
       max_score:
@@ -415,6 +420,7 @@ definitions:
       score_rate:
         type: number
     required:
+    - distribute_rate
     - fee_rate
     - score_rate
     type: object
@@ -1274,7 +1280,7 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - user
-  /pay/payout:
+  /pay/distribute:
     post:
       consumes:
       - application/json
@@ -1284,12 +1290,12 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: 付款请求
+      - description: 分发请求
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/payment.MerchantPayoutRequest'
+          $ref: '#/definitions/payment.MerchantDistributeRequest'
       produces:
       - application/json
       responses:

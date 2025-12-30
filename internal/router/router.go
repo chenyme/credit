@@ -107,8 +107,8 @@ func Serve() {
 	r.GET("/api.php", payment.QueryMerchantOrder)
 	// 退款接口
 	r.POST("/api.php", payment.RefundMerchantOrder)
-	// 商户付款接口
-	r.POST("/pay/payout", payment.RequireMerchantAuth(), payment.MerchantPayout)
+	// 商户分发接口
+	r.POST("/pay/distribute", payment.RequireMerchantAuth(), payment.MerchantDistribute)
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
 	{

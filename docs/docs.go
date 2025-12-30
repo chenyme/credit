@@ -1347,7 +1347,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/pay/payout": {
+        "/pay/distribute": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -1367,12 +1367,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "付款请求",
+                        "description": "分发请求",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/payment.MerchantPayoutRequest"
+                            "$ref": "#/definitions/payment.MerchantDistributeRequest"
                         }
                     }
                 ],
@@ -1689,7 +1689,8 @@ const docTemplate = `{
                         "transfer",
                         "community",
                         "online",
-                        "test"
+                        "test",
+                        "distribute"
                     ]
                 }
             }
@@ -1720,12 +1721,12 @@ const docTemplate = `{
                 }
             }
         },
-        "payment.MerchantPayoutRequest": {
+        "payment.MerchantDistributeRequest": {
             "type": "object",
             "required": [
                 "amount",
-                "recipient_id",
-                "recipient_username"
+                "user_id",
+                "username"
             ],
             "properties": {
                 "amount": {
@@ -1735,16 +1736,15 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 64
                 },
-                "recipient_id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "recipient_username": {
-                    "type": "string"
-                },
                 "remark": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -1961,12 +1961,16 @@ const docTemplate = `{
         "user_pay_config.CreateUserPayConfigRequest": {
             "type": "object",
             "required": [
+                "distribute_rate",
                 "fee_rate",
                 "score_rate"
             ],
             "properties": {
                 "daily_limit": {
                     "type": "integer"
+                },
+                "distribute_rate": {
+                    "type": "number"
                 },
                 "fee_rate": {
                     "type": "number"
@@ -1989,12 +1993,16 @@ const docTemplate = `{
         "user_pay_config.UpdateUserPayConfigRequest": {
             "type": "object",
             "required": [
+                "distribute_rate",
                 "fee_rate",
                 "score_rate"
             ],
             "properties": {
                 "daily_limit": {
                     "type": "integer"
+                },
+                "distribute_rate": {
+                    "type": "number"
                 },
                 "fee_rate": {
                     "type": "number"
